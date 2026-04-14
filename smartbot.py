@@ -16,27 +16,19 @@ from langchain_community.vectorstores import FAISS
 import numpy as np
 
 
-# -----------------------------
-# LOAD .env VARIABLES
-# -----------------------------
-load_dotenv()  # loads variables from .env into environment
+load_dotenv() 
 
 GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY")
 SERPER_API_KEY = os.environ.get("SERPER_API_KEY")
 
 
-# -----------------------------
-# SETUP EMBEDDINGS (Gemini)
-# -----------------------------
+
 embeddings = GoogleGenerativeAIEmbeddings(
     model="text-embedding-004",
     google_api_key=GOOGLE_API_KEY,
 )
 
 
-# -----------------------------
-# SETUP LLM (Gemini)
-# -----------------------------
 llm = ChatGoogleGenerativeAI(
     model="gemini-2.5-flash",
     temperature=0.7,
@@ -44,9 +36,7 @@ llm = ChatGoogleGenerativeAI(
 )
 
 
-# -----------------------------
-# 1. SEARCH TOOL (Serper)
-# -----------------------------
+
 search = GoogleSerperAPIWrapper(
     serper_api_key=SERPER_API_KEY
 )
@@ -58,9 +48,7 @@ def web_search(query: str) -> str:
     return search.run(query)
 
 
-# -----------------------------
-# 2. PDF SUMMARIZATION
-# -----------------------------
+
 def summarize_pdf(file_path: str) -> str:
     loader = PyPDFLoader(file_path)
     pages = loader.load()
@@ -71,9 +59,6 @@ def summarize_pdf(file_path: str) -> str:
     return getattr(resp, "content", getattr(resp, "text", str(resp)))
 
 
-# -----------------------------
-# 3. RAG TOOL (PDF Q&A)
-# -----------------------------
 def rag_query(question: str, pdf_path: str) -> str:
     loader = PyPDFLoader(pdf_path)
     docs = loader.load()
@@ -95,9 +80,7 @@ def rag_query(question: str, pdf_path: str) -> str:
     return getattr(resp, "content", getattr(resp, "text", str(resp)))
 
 
-# -----------------------------
-# 4. SERVICE LOOKUP (with location, contact, Google Maps)
-# -----------------------------
+
 def service_lookup(query: str) -> str:
     services = {
         "catering": [
@@ -256,13 +239,13 @@ if mode == "Service Lookup":
         st.markdown(service_lookup(query))
 
         st.divider()
-        st.subheader("📅 Book a Service (Dummy Booking)")
+        st.subheader(" Book a Service (Dummy Booking)")
 
         user_name = st.text_input("Your Name")
         service_name = st.text_input("Service Name to Book")
         api_key = st.text_input("API Key", value="DUMMY_BOOKING_123")
 
-        if st.button("✅ Book Service"):
+        if st.button(" Book Service"):
             if not user_name or not service_name:
                 st.warning("Please enter all details.")
             else:
@@ -273,7 +256,7 @@ if mode == "Service Lookup":
                 )
 
                 if result["status"] == "success":
-                    st.success("🎉 Booking Confirmed!")
+                    st.success(" Booking Confirmed!")
                     st.write(f"**Booking ID:** {result['booking_id']}")
                     st.write(f"**Service:** {result['service']}")
                     st.write(f"**Booked By:** {result['user']}")
