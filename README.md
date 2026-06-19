@@ -1,4 +1,4 @@
-# 🤖 SmartBot – AI Assistant with Memory, RAG & Web Search
+#  SmartBot – AI Assistant with Memory, RAG & Web Search
 
 SmartBot is an AI-powered assistant built using **LangChain**, **LangGraph**, **Google Gemini**, and **Flask**. It combines conversational AI, Retrieval-Augmented Generation (RAG), web search, and persistent memory to deliver intelligent, context-aware interactions through a modern ChatGPT-inspired interface.
 
