@@ -1,72 +1,198 @@
-# 🚀 SmartBot – AI Event Assistant with Memory & RAG
+# 🤖 SmartBot – AI Assistant with Memory, RAG & Web Search
 
-SmartBot is a state-of-the-art AI-powered chatbot designed for intelligent conversations, document understanding, and real-world service assistance. It features a dual-memory architecture and a premium ChatGPT-inspired user interface.
-
-## ✨ Key Features
-
-*   **🧠 Dual-Memory Architecture**:
-    *   **Short-Term**: Powered by **LangGraph** for maintaining session context.
-    *   **Long-Term**: Integrated with **Neo4j Graph Database** to remember users and historical facts across sessions.
-*   **🔍 Web Search Intelligence**: Integrated with **Serper API** to provide real-time information from the web.
-*   **📄 PDF Intelligence (RAG)**: Upload documents to get summaries or ask specific questions using Retrieval-Augmented Generation.
-*   **🛠️ Service Discovery**: Look up professional services (Catering, IT, Plumbing) with a streamlined interface.
-*   **🎨 Premium UI/UX**: A modern, responsive, and animated interface inspired by the latest ChatGPT design.
-*   **🔐 Authentication**: Built-in Login and Sign-up system with glassmorphism modals.
-
-## 🛠️ Technology Stack
-
-*   **Backend**: Flask (Python)
-*   **AI Orchestration**: LangChain & LangGraph
-*   **LLM**: Google Gemini (1.5 Flash)
-*   **Database**: Neo4j (Knowledge Graph)
-*   **Vector Store**: FAISS (for PDF RAG)
-*   **Frontend**: Vanilla JS, HTML5, CSS3 (Modern Flexbox/Grid)
-
-## 🚀 Getting Started
-
-### Prerequisites
-*   Python 3.10+
-*   Neo4j Instance (Aura or Local)
-*   Google Gemini API Key
-
-### Installation
-
-1. **Clone the repository**:
-   ```bash
-   git clone https://github.com/soban12185/smartbot.git
-   cd smartbot
-   ```
-
-2. **Install dependencies**:
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-3. **Configure Environment Variables**:
-   Create a `.env` file in the root directory:
-   ```env
-   GOOGLE_API_KEY=your_gemini_key
-   SERPER_API_KEY=your_serper_key
-   NEO4J_URI=neo4j+ssc://your_instance.databases.neo4j.io
-   NEO4J_USERNAME=neo4j
-   NEO4J_PASSWORD=your_password
-   ```
-
-4. **Run the application**:
-   ```bash
-   python app.py
-   ```
-   Access the bot at `http://localhost:5000`
-
-## ☁️ Deployment
-
-This project is configured for easy deployment on **Render**:
-*   **Build Command**: `pip install -r requirements.txt`
-*   **Start Command**: `gunicorn app:app`
-
-## 📄 License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
+SmartBot is an AI-powered assistant built using **LangChain**, **LangGraph**, **Google Gemini**, and **Flask**. It combines conversational AI, Retrieval-Augmented Generation (RAG), web search, and persistent memory to deliver intelligent, context-aware interactions through a modern ChatGPT-inspired interface.
 
 ---
-Built with ❤️ by [Soban](https://github.com/soban12185)
+
+# Features
+
+###  Intelligent Memory System
+
+* **Short-Term Memory** using **LangGraph State** for maintaining conversation context.
+* **Long-Term Memory** using **LangGraph PostgresStore** to remember user preferences and information across sessions.
+
+### 📄 Document Intelligence (RAG)
+
+* Upload PDF documents and ask natural language questions.
+* Generate document summaries using Retrieval-Augmented Generation (RAG).
+* FAISS vector search with Google Gemini for accurate document retrieval.
+
+###  Real-Time Web Search
+
+* Integrated **Google Serper API** to retrieve current information from the web.
+* Combines web search results with LLM reasoning for improved responses.
+
+###  Conversational AI
+
+* Multi-turn conversations with context retention.
+* Personalized responses based on stored user information.
+
+### 🛠 Service Discovery
+
+* Search and discover professional services such as Catering, Plumbing, IT Support, and more.
+
+###  Modern User Interface
+
+* ChatGPT-inspired responsive interface.
+* Authentication with Login and Sign-up pages.
+* Clean and user-friendly chat experience.
+
+---
+
+#  Tech Stack
+
+| Category      | Technologies                             |
+| ------------- | ---------------------------------------- |
+| Language      | Python                                   |
+| Backend       | Flask                                    |
+| LLM           | Google Gemini 1.5 Flash                  |
+| AI Frameworks | LangChain, LangGraph                     |
+| Memory        | LangGraph State, LangGraph PostgresStore |
+| Vector Store  | FAISS                                    |
+| Search        | Google Serper API                        |
+| Frontend      | HTML5, CSS3, JavaScript                  |
+| Deployment    | Render                                   |
+
+---
+
+# System Architecture
+
+```text
+                 User
+                   │
+                   ▼
+            SmartBot Interface
+                   │
+        ┌──────────┴──────────┐
+        ▼                     ▼
+LangGraph State      LangGraph PostgresStore
+(Short-Term Memory)  (Long-Term Memory)
+        │                     │
+        └──────────┬──────────┘
+                   ▼
+            LangChain Agent
+                   │
+        ┌──────────┼──────────┐
+        ▼          ▼          ▼
+ Google Gemini   FAISS      Serper API
+     LLM        (RAG)      Web Search
+                   │
+                   ▼
+             AI Response
+```
+
+---
+
+#  Project Structure
+
+```text
+smartbot/
+│
+├── app.py                 # Flask application
+├── chatbot.py             # Conversational AI logic
+├── rag.py                 # RAG pipeline
+├── memory.py              # LangGraph memory implementation
+├── services.py            # Service discovery
+├── templates/             # HTML pages
+├── static/                # CSS & JavaScript
+├── requirements.txt
+├── .env
+└── README.md
+```
+
+---
+
+#  Installation
+
+## Clone Repository
+
+```bash
+git clone https://github.com/soban12185/smartbot.git
+cd smartbot
+```
+
+## Install Dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+## Configure Environment Variables
+
+Create a `.env` file.
+
+```env
+GOOGLE_API_KEY=your_gemini_api_key
+SERPER_API_KEY=your_serper_api_key
+DATABASE_URL=your_langgraph_postgres_database
+```
+
+## Run Application
+
+```bash
+python app.py
+```
+
+Open
+
+```
+http://localhost:5000
+```
+
+---
+
+#  Key Capabilities
+
+* AI Chat Assistant
+* LangGraph Workflow
+* Short-Term Memory
+* Long-Term Memory
+* Retrieval-Augmented Generation (RAG)
+* PDF Question Answering
+* Document Summarization
+* Real-Time Web Search
+* Service Discovery
+* Responsive Web Interface
+
+---
+
+#  Screenshots
+
+Add screenshots of:
+
+* Login Page
+* Chat Interface
+* PDF Upload
+* RAG Question Answering
+* Web Search Results
+* User Memory Demonstration
+
+---
+
+#  Future Improvements
+
+* Voice-based conversations
+* Multi-agent workflow
+* Authentication with OAuth
+* Conversation analytics dashboard
+* Multi-document RAG
+* Streaming responses
+
+---
+
+# Author
+
+**Soban S**
+
+AI Engineer | Generative AI Engineer | Python Developer
+
+📧 [sobansoban12185@gmail.com](mailto:sobansoban12185@gmail.com)
+
+🔗 GitHub: https://github.com/soban12185
+
+🔗 LinkedIn: https://linkedin.com/in/soban-s-884759297
+
+---
+
+⭐ If you found this project useful, consider giving it a star.
+
