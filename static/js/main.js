@@ -1,5 +1,5 @@
 /* ===================================================
-   SmartBot – main.js
+   SmartBot – main.js (Production SaaS)
    =================================================== */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -36,8 +36,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // Auth
     const btnLogin  = document.getElementById('btn-login');
     const btnSignup = document.getElementById('btn-signup');
-    const modalLogin  = document.getElementById('modal-login');
-    const modalSignup = document.getElementById('modal-signup');
     const loginForm   = document.getElementById('login-form');
     const signupForm  = document.getElementById('signup-form');
     const goSignup    = document.getElementById('go-signup');
@@ -80,16 +78,13 @@ document.addEventListener('DOMContentLoaded', () => {
             btn.addEventListener('click', () => {
                 const mode = btn.dataset.mode;
                 switchView(mode);
-                // Close sidebar on mobile after tap
                 if (window.innerWidth <= 768) closeSidebar();
             });
         });
     }
 
     function switchView(mode) {
-        // Update nav
         document.querySelectorAll('.nav-btn').forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
-        // Update view
         document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
         const target = document.getElementById(`view-${mode}`);
         if (target) target.classList.add('active');
@@ -99,14 +94,12 @@ document.addEventListener('DOMContentLoaded', () => {
     //  CHAT
     // ─────────────────────────────────────────────────
     function setupChat() {
-        // Auto-grow textarea
         chatInput.addEventListener('input', () => {
             chatInput.style.height = 'auto';
             chatInput.style.height = Math.min(chatInput.scrollHeight, 180) + 'px';
             sendBtn.disabled = chatInput.value.trim() === '';
         });
 
-        // Enter to send (Shift+Enter = new line)
         chatInput.addEventListener('keydown', e => {
             if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
@@ -114,10 +107,8 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        // Form submit
         chatForm.addEventListener('submit', handleChatSubmit);
 
-        // Suggestion chips
         document.querySelectorAll('.chip').forEach(chip => {
             chip.addEventListener('click', () => {
                 const prompt = chip.dataset.prompt || chip.textContent.trim();
@@ -133,18 +124,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const message = chatInput.value.trim();
         if (!message || isProcessing) return;
 
-        // Hide welcome state
         if (welcomeState) welcomeState.style.display = 'none';
 
-        // Reset input
         chatInput.value = '';
         chatInput.style.height = 'auto';
         sendBtn.disabled = true;
 
-        // Render user bubble
         appendUserMessage(message);
 
-        // Show typing
         const typingEl = appendTypingIndicator();
         isProcessing = true;
 
@@ -196,12 +183,8 @@ document.addEventListener('DOMContentLoaded', () => {
         row.className = 'msg-row bot';
         const runIdAttr = runId ? `data-run-id="${escapeHtml(runId)}"` : '';
         row.innerHTML = `
-            <div class="bot-logo">
-                <svg width="18" height="18" viewBox="0 0 100 100" fill="none">
-                    <circle cx="50" cy="50" r="50" fill="white"/>
-                    <path d="M70 35C70 26.7 63.3 20 55 20H45C36.7 20 30 26.7 30 35V45C30 53.3 36.7 60 45 60H55C63.3 60 70 66.7 70 75" stroke="black" stroke-width="12" stroke-linecap="round"/>
-                    <circle cx="45" cy="35" r="5" fill="black"/>
-                </svg>
+            <div class="bot-logo" aria-hidden="true">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
             </div>
             <div class="msg-body">
                 <div class="msg-text">${formatMarkdown(text)}</div>
@@ -227,18 +210,13 @@ document.addEventListener('DOMContentLoaded', () => {
         row.className = 'msg-row bot';
 
         let html = `
-            <div class="bot-logo">
-                <svg width="18" height="18" viewBox="0 0 100 100" fill="none">
-                    <circle cx="50" cy="50" r="50" fill="white"/>
-                    <path d="M70 35C70 26.7 63.3 20 55 20H45C36.7 20 30 26.7 30 35V45C30 53.3 36.7 60 45 60H55C63.3 60 70 66.7 70 75" stroke="black" stroke-width="12" stroke-linecap="round"/>
-                    <circle cx="45" cy="35" r="5" fill="black"/>
-                </svg>
+            <div class="bot-logo" aria-hidden="true">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
             </div>
             <div class="msg-body">
                 <div class="msg-text">${formatMarkdown(data.response || '')}</div>
         `;
 
-        // Render product cards
         const products = data.products || [];
         const recommendation = data.recommendation || {};
         const localStores = data.local_stores || [];
@@ -257,18 +235,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 const p = rec.product;
                 html += `<div class="product-card-inline featured">`;
                 html += `<div class="product-card-header"><span class="product-badge">${label}</span>`;
-                // Rating: only show if from source
                 if (p.rating) html += `<span class="product-rating">⭐ ${p.rating}</span>`;
                 html += `</div>`;
                 html += `<div class="product-card-name">${escapeHtml(p.name)}</div>`;
-                // Price: only show if available
                 if (p.price != null) html += `<div class="product-card-price">₹${Number(p.price).toLocaleString()}</div>`;
-                // Store: only show if available
                 if (p.store_name) html += `<div class="product-card-store">${escapeHtml(p.store_name)}</div>`;
-                // Source confidence
                 if (p.source_confidence) {
                     const confLabels = { high: 'Trusted', medium: 'Standard', low: 'Verify' };
-                    html += `<div style="font-size:10px;color:#6b7280;margin:2px 0;">${confLabels[p.source_confidence] || ''}</div>`;
+                    html += `<div style="font-size:10px;color:var(--text-dim);margin:2px 0;">${confLabels[p.source_confidence] || ''}</div>`;
                 }
                 if (p.url) html += `<a href="${escapeHtml(p.url)}" target="_blank" class="product-link">View →</a>`;
                 html += `</div>`;
@@ -281,9 +255,7 @@ document.addEventListener('DOMContentLoaded', () => {
             for (const p of products.slice(0, 6)) {
                 html += `<div class="product-card-inline">`;
                 html += `<div class="product-card-name">${escapeHtml(p.name)}</div>`;
-                // Price: only show if available
                 if (p.price != null) html += `<div class="product-card-price">₹${Number(p.price).toLocaleString()}</div>`;
-                // Store: only show if available
                 if (p.store_name) html += `<div class="product-card-store">${escapeHtml(p.store_name)}</div>`;
                 if (p.url) html += `<a href="${escapeHtml(p.url)}" target="_blank" class="product-link">View →</a>`;
                 html += `</div>`;
@@ -309,12 +281,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const row = document.createElement('div');
         row.className = 'typing-row';
         row.innerHTML = `
-            <div class="bot-logo">
-                <svg width="18" height="18" viewBox="0 0 100 100" fill="none">
-                    <circle cx="50" cy="50" r="50" fill="white"/>
-                    <path d="M70 35C70 26.7 63.3 20 55 20H45C36.7 20 30 26.7 30 35V45C30 53.3 36.7 60 45 60H55C63.3 60 70 66.7 70 75" stroke="black" stroke-width="12" stroke-linecap="round"/>
-                    <circle cx="45" cy="35" r="5" fill="black"/>
-                </svg>
+            <div class="bot-logo" aria-hidden="true">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
             </div>
             <div class="typing-indicator">
                 <div class="typing-dot"></div>
@@ -341,7 +309,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const q = searchInput.value.trim();
             if (!q) return;
 
-            searchResults.innerHTML = `<div class="loader-text">Searching the web…</div>`;
+            searchResults.innerHTML = `<div class="loader-text">Searching the web...</div>`;
 
             try {
                 const res  = await fetch('/api/search', {
@@ -374,10 +342,8 @@ document.addEventListener('DOMContentLoaded', () => {
     function setupPDF() {
         if (!pdfDropZone) return;
 
-        // Click to open file picker
         pdfDropZone.addEventListener('click', () => pdfFileInput.click());
 
-        // File selected
         pdfFileInput.addEventListener('change', () => {
             if (pdfFileInput.files[0]) {
                 pdfDropZone.querySelector('.drop-title').textContent = pdfFileInput.files[0].name;
@@ -385,7 +351,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        // Drag & drop
         pdfDropZone.addEventListener('dragover', e => { e.preventDefault(); pdfDropZone.classList.add('dragover'); });
         pdfDropZone.addEventListener('dragleave', () => pdfDropZone.classList.remove('dragover'));
         pdfDropZone.addEventListener('drop', e => {
@@ -403,13 +368,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
         let currentDocId = null;
 
-        // Submit
         pdfForm.addEventListener('submit', async e => {
             e.preventDefault();
             if (!pdfFileInput.files[0]) return;
 
             pdfResults.style.display = 'none';
-            pdfResults.innerHTML = `<div class="loader-text">Analyzing document…</div>`;
+            pdfResults.innerHTML = `<div class="loader-text">Analyzing document...</div>`;
             pdfSubmitBtn.disabled = true;
 
             const formData = new FormData();
@@ -450,7 +414,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 `;
                 pdfResults.style.display = 'block';
 
-                // Wire up Q&A
                 const askBtn = document.getElementById('pdf-ask-btn');
                 const questionInput = document.getElementById('pdf-question');
                 const answerDiv = document.getElementById('pdf-answer');
@@ -460,7 +423,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (!q || !currentDocId) return;
                     askBtn.disabled = true;
                     answerDiv.style.display = 'block';
-                    answerDiv.innerHTML = `<em>Searching…</em>`;
+                    answerDiv.innerHTML = `<em>Searching...</em>`;
                     try {
                         const r = await fetch('/api/pdf/ask', {
                             method: 'POST',
@@ -501,7 +464,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ─────────────────────────────────────────────────
-    //  SERVICES – Real-time Google Places search
+    //  SERVICES
     // ─────────────────────────────────────────────────
     function setupServices() {
         if (!servicesForm) return;
@@ -527,7 +490,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         serviceSearchBtn.disabled = true;
-        servicesResults.innerHTML = `<div class="loader-text">Searching for ${escapeHtml(category)} services in ${escapeHtml(location)}…</div>`;
+        servicesResults.innerHTML = `<div class="loader-text">Searching for ${escapeHtml(category)} services in ${escapeHtml(location)}...</div>`;
 
         try {
             const res = await fetch('/api/services/search', {
@@ -563,7 +526,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const { results, count, location, timestamp } = data;
         const loc = location || (data.query && data.query.location) || '';
 
-        let html = `<div class="service-results-header">
+        let html = `<div class="service-results-header" style="font-size:14px;color:var(--text-secondary);margin-bottom:12px;">
             <strong>${count} matching service${count !== 1 ? 's' : ''}</strong> found near ${escapeHtml(loc)}
         </div>`;
 
@@ -622,7 +585,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const q = productsInput.value.trim();
             if (!q) return;
 
-            productsResults.innerHTML = `<div class="loader-text">Researching products… This may take a moment.</div>`;
+            productsResults.innerHTML = `<div class="loader-text">Researching products... This may take a moment.</div>`;
 
             try {
                 const res = await fetch('/api/products/search', {
@@ -652,7 +615,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         let html = '';
 
-        // Request summary
         const budgetMax = request.budget_max;
         const brand = request.brand;
         const category = request.category || request.product_query;
@@ -665,10 +627,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         html += `</div>`;
 
-        // No results message
         if (products.length === 0 && localStores.length === 0) {
             html += `<div class="loader-text">I couldn't find any ${escapeHtml(category)}s matching your criteria from the available sources.</div>`;
-            html += `<div class="loader-text" style="margin-top:8px;font-size:13px;color:var(--text-muted);">`;
+            html += `<div class="loader-text" style="margin-top:8px;font-size:13px;color:var(--text-dim);">`;
             html += `<strong>Suggestions:</strong><br>`;
             html += `- Try searching for '${escapeHtml(brand ? brand + ' ' : '')}${escapeHtml(category)}' with different features<br>`;
             html += `- Broaden your budget range<br>`;
@@ -678,7 +639,6 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        // Recommendations
         const recLabels = {
             best_overall: '🏆 Best Overall',
             best_budget: '💰 Best Budget',
@@ -693,25 +653,20 @@ document.addEventListener('DOMContentLoaded', () => {
             html += `<div class="product-card featured">`;
             html += `<div class="product-card-header">`;
             html += `<span class="product-badge">${label}</span>`;
-            // Rating: only show if from source
             if (p.rating) html += `<span class="product-rating">⭐ ${p.rating}</span>`;
             html += `</div>`;
             html += `<div class="product-card-name">${escapeHtml(p.name)}</div>`;
-            // Price: only show if available
             if (p.price != null) {
                 html += `<div class="product-card-price">₹${Number(p.price).toLocaleString()}</div>`;
             }
-            // Store: only show if available
             if (p.store_name) html += `<div class="product-card-store">${escapeHtml(p.store_name)}</div>`;
-            // Source confidence indicator
             if (p.source_confidence) {
-                const confColors = { high: '#10a37f', medium: '#f59e0b', low: '#6b7280' };
+                const confColors = { high: 'var(--success)', medium: 'var(--warning)', low: 'var(--text-dim)' };
                 const confLabels = { high: 'Trusted source', medium: 'Standard source', low: 'Verify independently' };
-                html += `<div style="font-size:11px;color:${confColors[p.source_confidence] || '#6b7280'};margin:4px 0;">`;
+                html += `<div style="font-size:11px;color:${confColors[p.source_confidence] || 'var(--text-dim)'};margin:4px 0;">`;
                 html += `${confLabels[p.source_confidence] || p.source_confidence}`;
                 html += `</div>`;
             }
-            // Specifications
             if (p.specifications && Object.keys(p.specifications).length) {
                 html += `<div class="product-specs">`;
                 for (const [k, v] of Object.entries(p.specifications)) {
@@ -719,7 +674,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 html += `</div>`;
             }
-            // Reasons
             if (rec.reasons && rec.reasons.length) {
                 html += `<div class="product-reasons">`;
                 for (const reason of rec.reasons) {
@@ -727,12 +681,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 html += `</div>`;
             }
-            // Link
             if (p.url) html += `<a href="${escapeHtml(p.url)}" target="_blank" class="product-link">View Product →</a>`;
             html += `</div>`;
         }
 
-        // All products
         if (products.length > 0) {
             html += `<div class="product-section-title">All Products Found (${products.length})</div>`;
             html += `<div class="product-grid">`;
@@ -742,7 +694,6 @@ document.addEventListener('DOMContentLoaded', () => {
             html += `</div>`;
         }
 
-        // Local stores
         if (localStores.length > 0) {
             html += `<div class="product-section-title">Local Stores</div>`;
             html += `<div class="local-stores-note">Local availability could not be verified. Contact the store before visiting.</div>`;
@@ -766,11 +717,9 @@ document.addEventListener('DOMContentLoaded', () => {
         html += `<div class="product-card-header">`;
         if (p.source_type === 'local') html += `<span class="product-source local">Local</span>`;
         else html += `<span class="product-source online">Online</span>`;
-        // Rating: only show if from source
         if (p.rating) html += `<span class="product-rating">⭐ ${p.rating}</span>`;
         html += `</div>`;
         html += `<div class="product-card-name">${escapeHtml(p.name)}</div>`;
-        // Price: only show if available (never fabricate)
         if (p.price != null) {
             html += `<div class="product-card-price">₹${Number(p.price).toLocaleString()}`;
             if (p.original_price && p.original_price > p.price) {
@@ -778,17 +727,14 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             html += `</div>`;
         }
-        // Store: only show if available
         if (p.store_name) html += `<div class="product-card-store">${escapeHtml(p.store_name)}</div>`;
-        // Source confidence
         if (p.source_confidence) {
-            const confColors = { high: '#10a37f', medium: '#f59e0b', low: '#6b7280' };
+            const confColors = { high: 'var(--success)', medium: 'var(--warning)', low: 'var(--text-dim)' };
             const confLabels = { high: 'Trusted', medium: 'Standard', low: 'Verify' };
-            html += `<div style="font-size:10px;color:${confColors[p.source_confidence] || '#6b7280'};margin:2px 0;">`;
+            html += `<div style="font-size:10px;color:${confColors[p.source_confidence] || 'var(--text-dim)'};margin:2px 0;">`;
             html += `${confLabels[p.source_confidence] || p.source_confidence}`;
             html += `</div>`;
         }
-        // Specifications
         if (p.specifications && Object.keys(p.specifications).length) {
             html += `<div class="product-specs">`;
             for (const [k, v] of Object.entries(p.specifications)) {
@@ -796,7 +742,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             html += `</div>`;
         }
-        // Link
         if (p.url) html += `<a href="${escapeHtml(p.url)}" target="_blank" class="product-link">View →</a>`;
         html += `</div>`;
         return html;
@@ -893,13 +838,10 @@ document.addEventListener('DOMContentLoaded', () => {
         Object.keys(localStorage).forEach(key => {
             if (key === 'sb_history') localStorage.removeItem(key);
         });
-        // Reset session
         sessionId = generateId();
         localStorage.setItem('sb_session', sessionId);
-        // Clear chat area
         if (chatArea) chatArea.innerHTML = '';
         if (welcomeState) welcomeState.style.display = '';
-        // Reset sidebar
         const nameEl = document.getElementById('sidebar-user-name');
         const planEl = document.getElementById('sidebar-user-plan');
         const avatarEl = document.querySelector('.user-avatar');
@@ -921,7 +863,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function setupAuth() {
-        // Check if already logged in
         const existing = localStorage.getItem('sb_user');
         if (existing) setLoggedInUser(existing);
 
@@ -946,7 +887,6 @@ document.addEventListener('DOMContentLoaded', () => {
             openModal('modal-signup');
         });
 
-        // Logout button
         document.getElementById('btn-logout')?.addEventListener('click', () => {
             clearLoggedInUser();
             showToast('Logged out successfully');
@@ -956,19 +896,16 @@ document.addEventListener('DOMContentLoaded', () => {
             showToast('Logged out successfully');
         });
 
-        // Close buttons
         document.querySelectorAll('.modal-close').forEach(btn => {
             btn.addEventListener('click', () => closeModal(btn.dataset.close));
         });
 
-        // Close on overlay click
         document.querySelectorAll('.modal-overlay').forEach(overlay => {
             overlay.addEventListener('click', e => {
                 if (e.target === overlay) closeModal(overlay.id);
             });
         });
 
-        // Switch links
         goSignup?.addEventListener('click', e => {
             e.preventDefault();
             closeModal('modal-login');
@@ -980,7 +917,6 @@ document.addEventListener('DOMContentLoaded', () => {
             openModal('modal-login');
         });
 
-        // Login
         loginForm?.addEventListener('submit', e => {
             e.preventDefault();
             const errEl = document.getElementById('login-error');
@@ -1006,7 +942,6 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('login-form').reset();
         });
 
-        // Signup
         signupForm?.addEventListener('submit', e => {
             e.preventDefault();
             const errEl = document.getElementById('signup-error');
@@ -1036,7 +971,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }, 1200);
         });
 
-        // Sidebar user card click to logout
         document.getElementById('user-card-btn')?.addEventListener('click', () => {
             const user = localStorage.getItem('sb_user');
             if (user) {
@@ -1056,6 +990,7 @@ document.addEventListener('DOMContentLoaded', () => {
         menuToggle?.addEventListener('click', () => {
             sidebar.classList.add('open');
             sidebarOverlay.classList.add('open');
+            sidebarOverlay.setAttribute('aria-hidden', 'false');
         });
         sidebarOverlay?.addEventListener('click', closeSidebar);
     }
@@ -1063,6 +998,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function closeSidebar() {
         sidebar?.classList.remove('open');
         sidebarOverlay?.classList.remove('open');
+        sidebarOverlay?.setAttribute('aria-hidden', 'true');
     }
 
     // ─────────────────────────────────────────────────
@@ -1086,14 +1022,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 entry.messages = entry.messages || [];
                 entry.messages.push({ role: 'user', text: message });
                 entry.messages.push({ role: 'bot', text: response });
-                entry.title = entry.messages[0].text.length > 32 ? entry.messages[0].text.slice(0, 32) + '…' : entry.messages[0].text;
+                entry.title = entry.messages[0].text.length > 32 ? entry.messages[0].text.slice(0, 32) + '...' : entry.messages[0].text;
                 localStorage.setItem('sb_history', JSON.stringify(history.slice(0, 50)));
                 renderHistory(history);
                 return;
             }
         }
 
-        const title = message.length > 32 ? message.slice(0, 32) + '…' : message;
+        const title = message.length > 32 ? message.slice(0, 32) + '...' : message;
         const entry = { id: Date.now(), title, ts: new Date().toISOString(), messages: [{ role: 'user', text: message }, { role: 'bot', text: response }] };
         currentChatId = entry.id;
         history.unshift(entry);
@@ -1104,9 +1040,9 @@ document.addEventListener('DOMContentLoaded', () => {
     function renderHistory(history) {
         if (!historyList) return;
         historyList.innerHTML = history.map(item => `
-            <div class="history-item" data-id="${item.id}" data-title="${escapeHtml(item.title)}" title="${escapeHtml(item.title)}">
+            <div class="history-item" data-id="${item.id}" data-title="${escapeHtml(item.title)}" title="${escapeHtml(item.title)}" role="listitem">
                 <span class="history-item-text">${escapeHtml(item.title)}</span>
-                <button class="history-delete-btn" data-id="${item.id}" title="Delete">&times;</button>
+                <button class="history-delete-btn" data-id="${item.id}" title="Delete" aria-label="Delete chat">&times;</button>
             </div>
         `).join('') || '<div style="padding:8px 12px;font-size:13px;color:var(--text-dim)">No chats yet</div>';
 
@@ -1180,7 +1116,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // ─────────────────────────────────────────────────
-    //  COPY TEXT HELPER (global so onclick can call it)
+    //  COPY TEXT HELPER
     // ─────────────────────────────────────────────────
     window.copyText = async function (btn, text) {
         try {
@@ -1191,7 +1127,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // ─────────────────────────────────────────────────
-    //  USER FEEDBACK (global so onclick can call it)
+    //  USER FEEDBACK
     // ─────────────────────────────────────────────────
     window.submitFeedback = async function (btn, score) {
         const actionsDiv = btn.closest('.msg-actions');
@@ -1213,8 +1149,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (res.ok) {
                 btn.title = 'Thanks!';
-                btn.style.color = '#10a37f';
-                // Disable both feedback buttons after submission
+                btn.style.color = 'var(--success)';
                 const feedbackBtns = actionsDiv.querySelectorAll('.feedback-btn');
                 feedbackBtns.forEach(b => { b.disabled = true; b.style.opacity = '0.5'; });
             } else {
@@ -1234,13 +1169,12 @@ document.addEventListener('DOMContentLoaded', () => {
         return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
     }
 
-    // Very basic markdown → HTML
     function formatMarkdown(text) {
         return text
             .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
             .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
             .replace(/\*(.+?)\*/g, '<em>$1</em>')
-            .replace(/`(.+?)`/g, '<code style="background:#2a2a2a;padding:2px 6px;border-radius:4px;font-family:monospace">$1</code>')
+            .replace(/`(.+?)`/g, '<code style="background:var(--bg-input);padding:2px 6px;border-radius:4px;font-family:monospace">$1</code>')
             .replace(/\n/g, '<br>');
     }
 

@@ -13,8 +13,8 @@
 <body>
 
 <!-- Mobile Header -->
-<div class="mobile-header" id="mobile-header">
-    <button class="icon-btn" id="menu-toggle">
+<header class="mobile-header" id="mobile-header" role="banner">
+    <button class="icon-btn" id="menu-toggle" aria-label="Open navigation menu">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
     </button>
     <span class="mobile-title">SmartBot</span>
@@ -25,63 +25,63 @@
         </div>
         <div id="mobile-auth-logged-in" style="display:none;align-items:center;gap:8px;">
             <span id="mobile-topbar-username" style="font-size:13px;color:var(--text);"></span>
-            <button id="mobile-btn-logout" class="btn-ghost btn-sm" style="color:#f87171;">Log out</button>
+            <button id="mobile-btn-logout" class="btn-ghost btn-sm" style="color:var(--error);">Log out</button>
         </div>
     </div>
-</div>
+</header>
 
 <!-- Sidebar Overlay (mobile) -->
-<div class="sidebar-overlay" id="sidebar-overlay"></div>
+<div class="sidebar-overlay" id="sidebar-overlay" aria-hidden="true"></div>
 
 <div class="app-container">
 
     <!-- ===== SIDEBAR ===== -->
-    <aside class="sidebar" id="sidebar">
+    <aside class="sidebar" id="sidebar" role="navigation" aria-label="Main navigation">
         <div class="sidebar-top">
             <div class="app-logo">
-                <div class="logo-icon">S</div>
+                <div class="logo-icon" aria-hidden="true">S</div>
                 <span class="app-name">SmartBot</span>
             </div>
         </div>
 
-        <nav class="sidebar-nav">
-            <button class="nav-btn active" data-mode="chat">
+        <nav class="sidebar-nav" aria-label="Feature navigation">
+            <button class="nav-btn active" data-mode="chat" aria-label="SmartBot Chat">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
                 <span>SmartBot</span>
             </button>
-            <button class="nav-btn" data-mode="search">
+            <button class="nav-btn" data-mode="search" aria-label="Web Search">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
                 <span>Web Search</span>
             </button>
-            <button class="nav-btn" data-mode="pdf">
+            <button class="nav-btn" data-mode="pdf" aria-label="PDF Tools">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/></svg>
                 <span>PDF Tools</span>
             </button>
-            <button class="nav-btn" data-mode="services">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+            <button class="nav-btn" data-mode="services" aria-label="Service Finder">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v2m0 18v2M4.22 4.22l1.42 1.42m12.72 12.72l1.42 1.42M1 12h2m18 0h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
                 <span>Services</span>
             </button>
-            <button class="nav-btn" data-mode="events">
+            <button class="nav-btn" data-mode="events" aria-label="Event Planner">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
                 <span>Event Planner</span>
             </button>
-            <button class="nav-btn" data-mode="products">
+            <button class="nav-btn" data-mode="products" aria-label="Product Research">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
                 <span>Products</span>
             </button>
         </nav>
 
-        <div class="history-section">
+        <div class="history-section" aria-label="Chat history">
             <div class="history-header">
                 <div class="history-label">Recent chats</div>
-                <button class="new-chat-btn" onclick="startNewChat()" title="New chat">+</button>
+                <button class="new-chat-btn" onclick="startNewChat()" title="New chat" aria-label="Start new chat">+</button>
             </div>
-            <div id="history-list" class="history-list"></div>
+            <div id="history-list" class="history-list" role="list"></div>
         </div>
 
         <div class="sidebar-footer">
-            <div class="user-card" id="user-card-btn">
-                <div class="user-avatar">S</div>
+            <div class="user-card" id="user-card-btn" role="button" tabindex="0" aria-label="User account">
+                <div class="user-avatar" aria-hidden="true">S</div>
                 <div class="user-info">
                     <div class="user-name" id="sidebar-user-name">SmartBot</div>
                     <div class="user-plan" id="sidebar-user-plan">Guest</div>
@@ -91,11 +91,11 @@
     </aside>
 
     <!-- ===== MAIN CONTENT ===== -->
-    <main class="main-content">
+    <main class="main-content" role="main">
 
         <!-- Top Bar -->
-        <header class="top-bar">
-            <div class="model-badge">
+        <header class="top-bar" role="banner">
+            <div class="model-badge" aria-label="Current mode">
                 SmartBot
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
             </div>
@@ -106,46 +106,42 @@
                 </div>
                 <div id="auth-logged-in" style="display:none;align-items:center;gap:12px;">
                     <span id="topbar-username" style="font-size:14px;color:var(--text);"></span>
-                    <button id="btn-logout" class="btn-ghost" style="color:#f87171;">Log out</button>
+                    <button id="btn-logout" class="btn-ghost" style="color:var(--error);">Log out</button>
                 </div>
             </div>
         </header>
 
         <!-- ── CHAT VIEW ── -->
-        <section id="view-chat" class="view active">
+        <section id="view-chat" class="view active" aria-label="Chat">
             <div class="chat-area" id="chat-area">
                 <!-- Welcome State -->
                 <div class="welcome-state" id="welcome-state">
-                    <div class="welcome-logo">
-                        <svg width="36" height="36" viewBox="0 0 100 100" fill="none">
-                            <circle cx="50" cy="50" r="50" fill="white"/>
-                            <path d="M70 35C70 26.7 63.3 20 55 20H45C36.7 20 30 26.7 30 35V45C30 53.3 36.7 60 45 60H55C63.3 60 70 66.7 70 75" stroke="black" stroke-width="12" stroke-linecap="round"/>
-                            <circle cx="45" cy="35" r="5" fill="black"/>
-                        </svg>
+                    <div class="welcome-logo" aria-hidden="true">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
                     </div>
                     <h1 class="welcome-heading">How can I help you today?</h1>
-                    <div class="prompt-chips">
-                        <button class="chip" data-prompt="Write me a short poem about AI">✍️ Write a poem</button>
-                        <button class="chip" data-prompt="Explain artificial intelligence in simple terms">🤖 Explain AI</button>
-                        <button class="chip" data-prompt="Give me 5 coding best practices">💻 Coding tips</button>
-                        <button class="chip" data-prompt="Suggest travel destinations in Europe">✈️ Travel ideas</button>
-                        <button class="chip" data-prompt="Find me the best laptop under ₹70,000">🛒 Find products</button>
+                    <div class="prompt-chips" role="group" aria-label="Suggested prompts">
+                        <button class="chip" data-prompt="Write me a short poem about AI">Write a poem</button>
+                        <button class="chip" data-prompt="Explain artificial intelligence in simple terms">Explain AI</button>
+                        <button class="chip" data-prompt="Give me 5 coding best practices">Coding tips</button>
+                        <button class="chip" data-prompt="Suggest travel destinations in Europe">Travel ideas</button>
+                        <button class="chip" data-prompt="Find me the best laptop under ₹70,000">Find products</button>
                     </div>
                 </div>
 
-                <!-- Messages will be injected here -->
-                <div id="messages-container" class="messages-container"></div>
+                <!-- Messages -->
+                <div id="messages-container" class="messages-container" role="log" aria-live="polite"></div>
             </div>
 
             <!-- Input Bar -->
             <div class="input-bar-wrapper">
-                <form id="chat-form" class="input-bar">
-                    <button type="button" class="input-action-btn" title="New Chat" onclick="startNewChat()">
+                <form id="chat-form" class="input-bar" role="search" aria-label="Chat input">
+                    <button type="button" class="input-action-btn" title="New Chat" onclick="startNewChat()" aria-label="Start new chat">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12h8"/></svg>
                     </button>
-                    <textarea id="chat-input" class="chat-textarea" placeholder="Ask anything…" rows="1" autocomplete="off"></textarea>
+                    <textarea id="chat-input" class="chat-textarea" placeholder="Ask anything..." rows="1" autocomplete="off" aria-label="Type your message"></textarea>
                     <div class="input-right-actions">
-                        <button type="submit" class="send-btn" id="send-btn" disabled>
+                        <button type="submit" class="send-btn" id="send-btn" disabled aria-label="Send message">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 19V5"/><path d="M5 12l7-7 7 7"/></svg>
                         </button>
                     </div>
@@ -155,62 +151,62 @@
         </section>
 
         <!-- ── SEARCH VIEW ── -->
-        <section id="view-search" class="view">
+        <section id="view-search" class="view" aria-label="Web Search">
             <div class="centered-view">
-                <div class="view-icon">
+                <div class="view-icon" aria-hidden="true">
                     <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
                 </div>
                 <h2 class="view-title">Search the Web</h2>
-                <form id="search-form" class="search-form">
+                <form id="search-form" class="search-form" role="search" aria-label="Web search">
                     <div class="search-input-wrap">
-                        <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-                        <input type="text" id="search-input" placeholder="Search the web…" autocomplete="off">
-                        <button type="submit" class="search-submit-btn">
+                        <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+                        <input type="text" id="search-input" placeholder="Search the web..." autocomplete="off" aria-label="Search query">
+                        <button type="submit" class="search-submit-btn" aria-label="Submit search">
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 19V5"/><path d="M5 12l7-7 7 7"/></svg>
                         </button>
                     </div>
                 </form>
-                <div id="search-results" class="results-grid"></div>
+                <div id="search-results" class="results-grid" role="region" aria-live="polite" aria-label="Search results"></div>
             </div>
         </section>
 
         <!-- ── PDF VIEW ── -->
-        <section id="view-pdf" class="view">
+        <section id="view-pdf" class="view" aria-label="PDF Tools">
             <div class="centered-view">
-                <div class="view-icon">
+                <div class="view-icon" aria-hidden="true">
                     <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/></svg>
                 </div>
                 <h2 class="view-title">PDF Intelligence</h2>
-                <form id="pdf-form" class="pdf-upload-form">
-                    <div class="drop-zone" id="drop-zone">
-                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17,8 12,3 7,8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                <form id="pdf-form" class="pdf-upload-form" aria-label="PDF upload">
+                    <div class="drop-zone" id="drop-zone" role="button" tabindex="0" aria-label="Drop PDF here or click to upload">
+                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17,8 12,3 7,8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
                         <p class="drop-title">Drop your PDF here or <span class="drop-link">click to upload</span></p>
                         <p class="drop-sub">Supports PDF files up to 20 pages</p>
-                        <input type="file" id="pdf-file-input" accept=".pdf" hidden>
+                        <input type="file" id="pdf-file-input" accept=".pdf" hidden aria-label="Choose PDF file">
                     </div>
                     <button type="submit" class="btn-primary" id="pdf-submit-btn" disabled>Analyze Document</button>
                 </form>
-                <div id="pdf-results" class="pdf-analyzer-output" style="display:none;">
+                <div id="pdf-results" class="pdf-analyzer-output" style="display:none;" role="region" aria-live="polite" aria-label="PDF analysis results">
                     <div id="pdf-summary" class="pdf-summary"></div>
                     <div id="pdf-qa" class="pdf-qa">
                         <div class="pdf-qa-bar">
-                            <input type="text" id="pdf-question" class="pdf-question-input" placeholder="Ask a question about this document..." />
-                            <button id="pdf-ask-btn" class="btn-primary" disabled>Ask</button>
+                            <input type="text" id="pdf-question" class="pdf-question-input" placeholder="Ask a question about this document..." aria-label="Ask about the PDF">
+                            <button id="pdf-ask-btn" class="btn-primary" disabled style="width:auto;padding:10px 20px;">Ask</button>
                         </div>
-                        <div id="pdf-answer" class="pdf-answer" style="display:none;"></div>
+                        <div id="pdf-answer" class="pdf-answer" style="display:none;" aria-live="polite"></div>
                     </div>
                 </div>
             </div>
         </section>
 
         <!-- ── SERVICES VIEW ── -->
-        <section id="view-services" class="view">
+        <section id="view-services" class="view" aria-label="Service Finder">
             <div class="centered-view">
-                <div class="view-icon">
+                <div class="view-icon" aria-hidden="true">
                     <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v2m0 18v2M4.22 4.22l1.42 1.42m12.72 12.72l1.42 1.42M1 12h2m18 0h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
                 </div>
                 <h2 class="view-title">Find Local Services</h2>
-                <form id="services-form" class="service-search-form">
+                <form id="services-form" class="service-search-form" aria-label="Service search">
                     <div class="service-form-grid">
                         <div class="form-group">
                             <label for="service-location">Location</label>
@@ -218,8 +214,8 @@
                         </div>
                         <div class="form-group">
                             <label for="service-category">Service Category</label>
-                            <select id="service-category" required>
-                                <option value="">Select a service…</option>
+                            <select id="service-category" required aria-label="Select service category">
+                                <option value="">Select a service...</option>
                                 <option value="catering">Catering</option>
                                 <option value="plumber">Plumber</option>
                                 <option value="electrician">Electrician</option>
@@ -246,26 +242,26 @@
                         </div>
                     </div>
                     <button type="submit" class="service-search-btn" id="service-search-btn">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
                         Find Services
                     </button>
                 </form>
-                <div id="services-results" class="results-grid"></div>
+                <div id="services-results" class="results-grid" role="region" aria-live="polite" aria-label="Service results"></div>
             </div>
         </section>
 
         <!-- ── EVENT PLANNER VIEW ── -->
-        <section id="view-events" class="view">
+        <section id="view-events" class="view" aria-label="Event Planner">
             <div class="centered-view">
-                <div class="view-icon">
+                <div class="view-icon" aria-hidden="true">
                     <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
                 </div>
                 <h2 class="view-title">AI Event Planner</h2>
-                <form id="event-form" class="event-form">
+                <form id="event-form" class="event-form" aria-label="Event planning form">
                     <div class="event-form-grid">
                         <div class="form-group">
                             <label for="event-type">Event Type</label>
-                            <select id="event-type">
+                            <select id="event-type" aria-label="Event type">
                                 <option value="Wedding">Wedding</option>
                                 <option value="Birthday">Birthday</option>
                                 <option value="Party">Party</option>
@@ -299,34 +295,34 @@
                         <label for="event-notes">Special Requirements</label>
                         <textarea id="event-notes" rows="3" placeholder="e.g. Vegetarian food, live band, specific theme..."></textarea>
                     </div>
-                    <label class="toggle-label" style="max-width:620px;width:100%;display:flex;align-items:center;gap:10px;cursor:pointer;">
+                    <label class="toggle-label">
                         <input type="checkbox" id="event-dummy-mode" style="width:18px;height:18px;cursor:pointer;">
-                        <span style="font-size:13px;color:var(--text-muted);">Demo Mode (skip AI, use sample plan)</span>
+                        <span>Demo Mode (skip AI, use sample plan)</span>
                     </label>
                     <button type="submit" class="btn-primary" id="event-submit-btn" style="max-width:620px;width:100%;">Generate Plan</button>
                 </form>
-                <div id="event-results" class="results-grid" style="margin-top:24px;"></div>
+                <div id="event-results" class="results-grid" style="margin-top:24px;" role="region" aria-live="polite" aria-label="Event plan results"></div>
             </div>
         </section>
 
         <!-- ── PRODUCT RESEARCH VIEW ── -->
-        <section id="view-products" class="view">
+        <section id="view-products" class="view" aria-label="Product Research">
             <div class="centered-view">
-                <div class="view-icon">
+                <div class="view-icon" aria-hidden="true">
                     <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
                 </div>
                 <h2 class="view-title">Product Research</h2>
-                <p style="color:var(--text-muted);margin-top:-8px;margin-bottom:16px;font-size:14px;">Search for products, compare prices, and get recommendations</p>
-                <form id="products-form" class="search-form">
+                <p style="color:var(--text-dim);margin-top:-8px;margin-bottom:16px;font-size:14px;">Search for products, compare prices, and get recommendations</p>
+                <form id="products-form" class="search-form" role="search" aria-label="Product search">
                     <div class="search-input-wrap">
-                        <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-                        <input type="text" id="products-input" placeholder='e.g. "Best laptop under ₹70,000 for coding"' autocomplete="off">
-                        <button type="submit" class="search-submit-btn">
+                        <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+                        <input type="text" id="products-input" placeholder='e.g. "Best laptop under ₹70,000 for coding"' autocomplete="off" aria-label="Product search query">
+                        <button type="submit" class="search-submit-btn" aria-label="Search products">
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 19V5"/><path d="M5 12l7-7 7 7"/></svg>
                         </button>
                     </div>
                 </form>
-                <div id="products-results" class="results-grid"></div>
+                <div id="products-results" class="results-grid" role="region" aria-live="polite" aria-label="Product results"></div>
             </div>
         </section>
 
@@ -334,13 +330,13 @@
 </div>
 
 <!-- ── TOAST ── -->
-<div class="toast" id="toast"></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <!-- ── LOGIN MODAL ── -->
-<div class="modal-overlay" id="modal-login">
+<div class="modal-overlay" id="modal-login" role="dialog" aria-labelledby="login-title" aria-modal="true">
     <div class="modal-box">
-        <button class="modal-close" data-close="modal-login">✕</button>
-        <h2 class="modal-title">Welcome back</h2>
+        <button class="modal-close" data-close="modal-login" aria-label="Close login dialog">✕</button>
+        <h2 class="modal-title" id="login-title">Welcome back</h2>
         <form id="login-form" class="auth-form">
             <div class="form-group">
                 <label for="login-email">Email</label>
@@ -350,7 +346,7 @@
                 <label for="login-password">Password</label>
                 <input type="password" id="login-password" placeholder="••••••••" required>
             </div>
-            <div class="auth-error" id="login-error"></div>
+            <div class="auth-error" id="login-error" role="alert"></div>
             <button type="submit" class="btn-primary" id="login-submit-btn">Continue</button>
         </form>
         <p class="modal-switch">No account? <a href="#" id="go-signup">Sign up</a></p>
@@ -358,10 +354,10 @@
 </div>
 
 <!-- ── SIGNUP MODAL ── -->
-<div class="modal-overlay" id="modal-signup">
+<div class="modal-overlay" id="modal-signup" role="dialog" aria-labelledby="signup-title" aria-modal="true">
     <div class="modal-box">
-        <button class="modal-close" data-close="modal-signup">✕</button>
-        <h2 class="modal-title">Create account</h2>
+        <button class="modal-close" data-close="modal-signup" aria-label="Close signup dialog">✕</button>
+        <h2 class="modal-title" id="signup-title">Create account</h2>
         <form id="signup-form" class="auth-form">
             <div class="form-group">
                 <label for="signup-name">Full Name</label>
@@ -375,7 +371,7 @@
                 <label for="signup-password">Password</label>
                 <input type="password" id="signup-password" placeholder="Min 6 characters" minlength="6" required>
             </div>
-            <div class="auth-error" id="signup-error"></div>
+            <div class="auth-error" id="signup-error" role="alert"></div>
             <button type="submit" class="btn-primary" id="signup-submit-btn">Create account</button>
         </form>
         <p class="modal-switch">Already have an account? <a href="#" id="go-login">Log in</a></p>
