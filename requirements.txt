@@ -5,7 +5,7 @@ langchain
 langchain-community
 langchain-openai
 langgraph
-langgraph-checkpoint-postgres
+langsmith
 neo4j
 PyMuPDF
 requests
@@ -13,6 +13,5 @@ openai
 google-generativeai
 psycopg[binary]
 psycopg_pool
-fastapi
-uvicorn
 python-multipart
+pytest

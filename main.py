@@ -1,12 +1,29 @@
 import os
 import time
 import logging
+import uuid
 from flask import Flask, render_template, request, jsonify
 from flask_cors import CORS
 from werkzeug.utils import secure_filename
 from dotenv import load_dotenv
 from memory_system import ltm
 from pdf_analyzer import analyze_pdf, search as pdf_search
+from product_research import detect_product_intent, research_products
+from services.service_finder import search_services
+from tracing import (
+    trace_run,
+    trace_chat_request,
+    trace_langgraph,
+    trace_rag_retrieval,
+    trace_rag_generation,
+    trace_product_research,
+    trace_web_search,
+    trace_event_plan,
+    trace_service_search,
+    trace_llm_call,
+    submit_feedback,
+    is_tracing_enabled,
+)
 
 RATE_LIMIT_PER_MINUTE = int(os.environ.get('RATE_LIMIT_PER_MINUTE', '10'))
 RATE_LIMIT_PER_DAY = int(os.environ.get('RATE_LIMIT_PER_DAY', '1000'))
@@ -49,7 +66,7 @@ GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
 SERPER_API_KEY = os.environ.get("SERPER_API_KEY")
 
 if GROQ_API_KEY:
-    logger.info(f"Loaded GROQ_API_KEY: {GROQ_API_KEY[:5]}...{GROQ_API_KEY[-3:]}")
+    logger.info("GROQ_API_KEY loaded successfully")
 else:
     logger.error("GROQ_API_KEY is missing!")
 
@@ -113,52 +130,6 @@ except Exception as e:
     logger.error(f"Error initializing AI components: {str(e)}")
     raise
 
-# Service database
-SERVICES_DB = {
-    "catering": [
-        {
-            "name": "A1 Catering",
-            "location": "Chennai",
-            "contact": "+91-98765-11111",
-            "maps_url": "https://www.google.com/maps?q=A1+Catering+Chennai",
-        },
-        {
-            "name": "FoodZone",
-            "location": "Chennai",
-            "contact": "+91-98765-22222",
-            "maps_url": "https://www.google.com/maps?q=FoodZone+Chennai",
-        },
-    ],
-    "decoration": [
-        {
-            "name": "EventDecor Pro",
-            "location": "Chennai",
-            "contact": "+91-98765-33333",
-            "maps_url": "https://www.google.com/maps?q=EventDecor+Pro+Chennai",
-        },
-        {
-            "name": "FlowerArt",
-            "location": "Chennai",
-            "contact": "+91-98765-44444",
-            "maps_url": "https://www.google.com/maps?q=FlowerArt+Chennai",
-        },
-    ],
-    "photography": [
-        {
-            "name": "LensCraft",
-            "location": "Chennai",
-            "contact": "+91-98765-55555",
-            "maps_url": "https://www.google.com/maps?q=LensCraft+Chennai",
-        },
-        {
-            "name": "WeddingFrames",
-            "location": "Chennai",
-            "contact": "+91-98765-66666",
-            "maps_url": "https://www.google.com/maps?q=WeddingFrames+Chennai",
-        },
-    ],
-}
-
 DUMMY_API_KEY = "DUMMY_BOOKING_123"
 
 
@@ -183,33 +154,60 @@ def chat():
         
         if not query:
             return jsonify({'error': 'Query is required'}), 400
-        
-        # 1. Retrieve LTM context from Postgres
-        ltm_context = ""
-        try:
-            ltm_context = ltm.build_context(session_id, query)
-        except Exception as e:
-            logger.error(f"LTM retrieval error: {e}")
 
-        # 2. Build prompt with LTM
-        user_message_text = query
-        if ltm_context:
-            user_message_text = f"{ltm_context}\n\nUser Question: {query}"
-        
-        inputs = {"messages": [HumanMessage(content=user_message_text)]}
-        config = {"configurable": {"thread_id": session_id}}
-        
-        # 3. Invoke LangGraph
-        output = chat_graph.invoke(inputs, config=config)
-        response_text = output["messages"][-1].content
-        
-        # 4. Save to LTM
-        try:
-            ltm.extract_facts(session_id, query, response_text)
-        except Exception as e:
-            logger.error(f"LTM save error: {e}")
-        
-        return jsonify({'response': response_text})
+        run_id = str(uuid.uuid4())[:8]
+
+        with trace_chat_request(query, session_id, {"run_id": run_id}) as chat_run:
+            # 0. Check if this is a product research query
+            intent = detect_product_intent(query)
+            if intent.get("is_product") and intent.get("confidence", 0) >= 0.4:
+                try:
+                    with trace_product_research(query, {"intent_confidence": intent.get("confidence")}) as pr_run:
+                        product_result = research_products(query)
+                    result = {
+                        'response': product_result.get('synthesis', ''),
+                        'type': 'product_research',
+                        'products': product_result.get('products', []),
+                        'local_stores': product_result.get('local_stores', []),
+                        'recommendation': product_result.get('recommendation', {}),
+                        'run_id': run_id,
+                    }
+                    if chat_run:
+                        chat_run.end(outputs={"type": "product_research", "product_count": len(result.get("products", []))})
+                    return jsonify(result)
+                except Exception as e:
+                    logger.error(f"Product research failed, falling back to chat: {e}")
+
+            # 1. Retrieve LTM context from Postgres
+            ltm_context = ""
+            try:
+                ltm_context = ltm.build_context(session_id, query)
+            except Exception as e:
+                logger.error(f"LTM retrieval error: {e}")
+
+            # 2. Build prompt with LTM
+            user_message_text = query
+            if ltm_context:
+                user_message_text = f"{ltm_context}\n\nUser Question: {query}"
+            
+            inputs = {"messages": [HumanMessage(content=user_message_text)]}
+            config = {"configurable": {"thread_id": session_id}}
+            
+            # 3. Invoke LangGraph with tracing
+            with trace_langgraph(query, {"session_id": session_id, "has_ltm_context": bool(ltm_context)}) as lg_run:
+                output = chat_graph.invoke(inputs, config=config)
+                response_text = output["messages"][-1].content
+
+            # 4. Save to LTM
+            try:
+                ltm.extract_facts(session_id, query, response_text)
+            except Exception as e:
+                logger.error(f"LTM save error: {e}")
+            
+            if chat_run:
+                chat_run.end(outputs={"response_length": len(response_text), "run_id": run_id})
+
+            return jsonify({'response': response_text, 'run_id': run_id})
     
     except Exception as e:
         logger.error(f"Error in chat: {str(e)}", exc_info=True)
@@ -265,18 +263,51 @@ def web_search():
             return jsonify({'error': 'Query is required'}), 400
         
         logger.debug(f"Search query: {query}")
-        
-        # Get structured results instead of raw text
-        results_dict = search.results(query)
-        organic_results = results_dict.get('organic', [])
-        
-        logger.debug(f"Search found {len(organic_results)} organic results")
+
+        with trace_web_search(query) as search_run:
+            # Get structured results instead of raw text
+            results_dict = search.results(query)
+            organic_results = results_dict.get('organic', [])
+
+            logger.debug(f"Search found {len(organic_results)} organic results")
+
+            if search_run:
+                search_run.end(outputs={"result_count": len(organic_results)})
         
         return jsonify({'results': organic_results})
     
     except Exception as e:
         logger.error(f"Error in search: {str(e)}", exc_info=True)
         return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/products/search', methods=['POST'])
+def product_search():
+    """Search for products online and in local stores"""
+    try:
+        ok, msg = _check_rate_limit()
+        if not ok:
+            return jsonify({'error': msg}), 429
+
+        data = request.get_json()
+        query = data.get('query', '')
+
+        if not query:
+            return jsonify({'error': 'Query is required'}), 400
+
+        logger.info(f"Product research query: {query}")
+
+        with trace_product_research(query) as pr_run:
+            result = research_products(query)
+
+        if pr_run:
+            pr_run.end(outputs={"product_count": result.get("total_products", 0)})
+
+        return jsonify(result)
+
+    except Exception as e:
+        logger.error(f"Error in product search: {str(e)}", exc_info=True)
+        return jsonify({'error': 'Product search failed. Please try again.'}), 500
 
 
 @app.route('/api/pdf/summary', methods=['POST'])
@@ -298,12 +329,16 @@ def pdf_summary():
         filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         file.save(filepath)
 
-        result = analyze_pdf(filepath, filename)
+        with trace_run("pdf_indexing", run_type="chain", inputs={"filename": filename}, tags=["rag", "production"]) as pdf_run:
+            result = analyze_pdf(filepath, filename)
 
         os.remove(filepath)
 
         if "error" in result:
             return jsonify({'error': result['error']}), 400
+
+        if pdf_run:
+            pdf_run.end(outputs={"doc_id": result.get("doc_id"), "chunks": result.get("chunks", 0)})
 
         return jsonify(result)
 
@@ -326,10 +361,18 @@ def pdf_ask():
         if not doc_id:
             return jsonify({'error': 'Please upload a PDF first.'}), 400
 
-        result = pdf_search(question, doc_id)
+        with trace_run("pdf_qa", run_type="chain", inputs={"question": question, "doc_id": doc_id}, tags=["rag", "production"]) as qa_run:
+            result = pdf_search(question, doc_id)
 
         if "error" in result:
             return jsonify({'error': result['error']}), 400
+
+        if qa_run:
+            qa_run.end(outputs={
+                "has_answer": "answer" in result,
+                "confidence": result.get("confidence", 0),
+                "source_count": len(result.get("sources", [])),
+            })
 
         return jsonify(result)
 
@@ -338,89 +381,38 @@ def pdf_ask():
         return jsonify({'error': 'Failed to search document. Please try again.'}), 500
 
 
-@app.route('/api/services/lookup', methods=['POST'])
-def service_lookup():
-    """Look up available services"""
+@app.route('/api/services/search', methods=['POST'])
+def service_search():
+    """Search for real local service providers via web search."""
     try:
         data = request.get_json()
-        query = data.get('query', '').lower()
-        
-        if not query:
-            return jsonify({'error': 'Query is required'}), 400
-        
-        logger.debug(f"Service lookup query: {query}")
-        
-        # Detect service type
-        matched_type = None
-        for key in SERVICES_DB.keys():
-            if key in query:
-                matched_type = key
-                break
-        
-        if not matched_type:
-            return jsonify({
-                'error': 'Service not found. Try using words like catering, decoration, or photography.'
-            }), 404
-        
-        # Optional location filter
-        location = None
-        if " in " in query:
-            location = query.split(" in ", 1)[1].strip()
-        
-        results = SERVICES_DB[matched_type]
-        
-        if location:
-            filtered = [
-                s for s in results
-                if location.lower() in s["location"].lower()
-            ]
-            if filtered:
-                results = filtered
-        
-        logger.debug(f"Found {len(results)} services for {matched_type}")
-        
-        return jsonify({
-            'service_type': matched_type,
-            'services': results
-        })
-    
-    except Exception as e:
-        logger.error(f"Error in service lookup: {str(e)}", exc_info=True)
-        return jsonify({'error': str(e)}), 500
+        location = (data.get("location") or "").strip()
+        service_category = (data.get("service_category") or "").strip()
+        special_requirements = (data.get("special_requirements") or "").strip()
 
+        if not location:
+            return jsonify({"error": "Location is required. Please provide a city or area."}), 400
+        if not service_category:
+            return jsonify({"error": "Service category is required. Please specify the type of service."}), 400
 
-@app.route('/api/services/book', methods=['POST'])
-def book_service():
-    """Book a service (dummy booking)"""
-    try:
-        data = request.get_json()
-        service_name = data.get('service_name', '')
-        user_name = data.get('user_name', '')
-        api_key = data.get('api_key', '')
-        
-        if not all([service_name, user_name, api_key]):
-            return jsonify({'error': 'All fields are required'}), 400
-        
-        logger.debug(f"Booking request: {service_name} by {user_name}")
-        
-        if api_key != DUMMY_API_KEY:
-            return jsonify({'error': 'Invalid API key'}), 401
-        
-        booking_id = f"BOOK-{random.randint(1000, 9999)}"
-        
-        logger.info(f"Booking successful: {booking_id}")
-        
-        return jsonify({
-            'status': 'success',
-            'booking_id': booking_id,
-            'service': service_name,
-            'user': user_name,
-            'message': 'Service booked successfully (Dummy Booking)'
-        })
-    
+        with trace_service_search(
+            location=location,
+            service_category=service_category,
+            special_requirements=special_requirements,
+        ) as run:
+            result = search_services(
+                location=location,
+                service_category=service_category,
+                special_requirements=special_requirements,
+            )
+            if run is not None:
+                run.add_outputs(result)
+
+        return jsonify(result)
+
     except Exception as e:
-        logger.error(f"Error in booking: {str(e)}", exc_info=True)
-        return jsonify({'error': str(e)}), 500
+        logger.error(f"Error in service search: {str(e)}", exc_info=True)
+        return jsonify({"error": "Service search is temporarily unavailable. Please try again."}), 500
 
 
 @app.route('/api/event/plan', methods=['POST'])
@@ -513,6 +505,37 @@ Event Details:
         if "API_KEY_INVALID" in err or "403" in err:
             return jsonify({'error': 'AI service configuration error. Please contact support.'}), 403
         return jsonify({'error': 'Something went wrong while planning your event. Please try again.'}), 500
+
+
+@app.route('/api/feedback', methods=['POST'])
+def feedback():
+    """Submit user feedback for a LangSmith run"""
+    try:
+        data = request.get_json()
+        run_id = data.get('run_id', '')
+        score = data.get('score')  # 1 = positive, 0 = negative
+        comment = data.get('comment', '')
+
+        if not run_id or score is None:
+            return jsonify({'error': 'run_id and score are required'}), 400
+
+        success = submit_feedback(run_id, int(score), comment)
+
+        return jsonify({'status': 'submitted' if success else 'unavailable'})
+
+    except Exception as e:
+        logger.error(f"Error in feedback: {str(e)}", exc_info=True)
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/langsmith/status', methods=['GET'])
+def langsmith_status():
+    """Check LangSmith tracing status"""
+    enabled = is_tracing_enabled()
+    return jsonify({
+        'tracing_enabled': enabled,
+        'project': os.environ.get('LANGSMITH_PROJECT', 'smartbot'),
+    })
 
 
 if __name__ == '__main__':

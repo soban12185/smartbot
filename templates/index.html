@@ -65,6 +65,10 @@
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
                 <span>Event Planner</span>
             </button>
+            <button class="nav-btn" data-mode="products">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+                <span>Products</span>
+            </button>
         </nav>
 
         <div class="history-section">
@@ -125,6 +129,7 @@
                         <button class="chip" data-prompt="Explain artificial intelligence in simple terms">🤖 Explain AI</button>
                         <button class="chip" data-prompt="Give me 5 coding best practices">💻 Coding tips</button>
                         <button class="chip" data-prompt="Suggest travel destinations in Europe">✈️ Travel ideas</button>
+                        <button class="chip" data-prompt="Find me the best laptop under ₹70,000">🛒 Find products</button>
                     </div>
                 </div>
 
@@ -202,17 +207,48 @@
         <section id="view-services" class="view">
             <div class="centered-view">
                 <div class="view-icon">
-                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v2m0 18v2M4.22 4.22l1.42 1.42m12.72 12.72l1.42 1.42M1 12h2m18 0h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
                 </div>
-                <h2 class="view-title">Find Professional Services</h2>
-                <form id="services-form" class="search-form">
-                    <div class="search-input-wrap">
-                        <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-                        <input type="text" id="services-input" placeholder="Search catering, plumbing, IT…" autocomplete="off">
-                        <button type="submit" class="search-submit-btn">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 19V5"/><path d="M5 12l7-7 7 7"/></svg>
-                        </button>
+                <h2 class="view-title">Find Local Services</h2>
+                <form id="services-form" class="service-search-form">
+                    <div class="service-form-grid">
+                        <div class="form-group">
+                            <label for="service-location">Location</label>
+                            <input type="text" id="service-location" placeholder="e.g., Bangalore, Koramangala" autocomplete="off" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="service-category">Service Category</label>
+                            <select id="service-category" required>
+                                <option value="">Select a service…</option>
+                                <option value="catering">Catering</option>
+                                <option value="plumber">Plumber</option>
+                                <option value="electrician">Electrician</option>
+                                <option value="ac repair">AC Repair</option>
+                                <option value="appliance repair">Appliance Repair</option>
+                                <option value="photographer">Photographer</option>
+                                <option value="wedding photographer">Wedding Photographer</option>
+                                <option value="cleaning">Cleaning Service</option>
+                                <option value="salon">Salon</option>
+                                <option value="beauty service">Beauty Service</option>
+                                <option value="car repair">Car Repair</option>
+                                <option value="bike repair">Bike Repair</option>
+                                <option value="home tutor">Home Tutor</option>
+                                <option value="pest control">Pest Control</option>
+                                <option value="laundry">Laundry</option>
+                                <option value="event decorator">Event Decorator</option>
+                                <option value="event planner">Event Planner</option>
+                                <option value="makeup artist">Makeup Artist</option>
+                            </select>
+                        </div>
+                        <div class="form-group form-group-full">
+                            <label for="service-requirements">Special Requirements <span class="label-optional">(optional)</span></label>
+                            <input type="text" id="service-requirements" placeholder="e.g., Vegetarian catering for 100 people, tomorrow evening, budget ₹30,000" autocomplete="off">
+                        </div>
                     </div>
+                    <button type="submit" class="service-search-btn" id="service-search-btn">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+                        Find Services
+                    </button>
                 </form>
                 <div id="services-results" class="results-grid"></div>
             </div>
@@ -270,6 +306,27 @@
                     <button type="submit" class="btn-primary" id="event-submit-btn" style="max-width:620px;width:100%;">Generate Plan</button>
                 </form>
                 <div id="event-results" class="results-grid" style="margin-top:24px;"></div>
+            </div>
+        </section>
+
+        <!-- ── PRODUCT RESEARCH VIEW ── -->
+        <section id="view-products" class="view">
+            <div class="centered-view">
+                <div class="view-icon">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+                </div>
+                <h2 class="view-title">Product Research</h2>
+                <p style="color:var(--text-muted);margin-top:-8px;margin-bottom:16px;font-size:14px;">Search for products, compare prices, and get recommendations</p>
+                <form id="products-form" class="search-form">
+                    <div class="search-input-wrap">
+                        <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+                        <input type="text" id="products-input" placeholder='e.g. "Best laptop under ₹70,000 for coding"' autocomplete="off">
+                        <button type="submit" class="search-submit-btn">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 19V5"/><path d="M5 12l7-7 7 7"/></svg>
+                        </button>
+                    </div>
+                </form>
+                <div id="products-results" class="results-grid"></div>
             </div>
         </section>
 

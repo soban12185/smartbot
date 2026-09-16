@@ -28,11 +28,15 @@ import logging
 import math
 import os
 import re
+import time
 import uuid
 from typing import Any, Dict, List, Optional, Tuple
 
+import fitz
 import requests
 from openai import OpenAI
+
+from tracing import trace_run, trace_rag_retrieval, trace_rag_generation, trace_llm_call
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
@@ -253,6 +257,8 @@ def embed_texts(
     texts: List[str],
     task: str,
     batch_size: int = 50,
+    max_retries: int = 3,
+    retry_delay: float = 1.0,
 ) -> Optional[List[List[float]]]:
     api_key = os.environ.get("JINA_API_KEY", "")
     if not api_key:
@@ -263,34 +269,52 @@ def embed_texts(
 
     for i in range(0, len(texts), batch_size):
         batch = texts[i : i + batch_size]
-        try:
-            response = requests.post(
-                JINA_EMBED_URL,
-                headers=_jina_headers(),
-                json={
-                    "model": JINA_EMBED_MODEL,
-                    "input": [{"text": t} for t in batch],
-                    "task": task,
-                },
-                timeout=60,
-            )
-            response.raise_for_status()
-            data = response.json().get("data", [])
-            data.sort(key=lambda item: item.get("index", 0))
-
-            if len(data) != len(batch):
-                logger.error(
-                    "Jina returned %d embeddings for %d inputs.",
-                    len(data),
-                    len(batch),
+        last_error = None
+        for attempt in range(max_retries):
+            try:
+                response = requests.post(
+                    JINA_EMBED_URL,
+                    headers=_jina_headers(),
+                    json={
+                        "model": JINA_EMBED_MODEL,
+                        "input": [{"text": t} for t in batch],
+                        "task": task,
+                    },
+                    timeout=60,
                 )
+                response.raise_for_status()
+                data = response.json().get("data", [])
+                data.sort(key=lambda item: item.get("index", 0))
+
+                if len(data) != len(batch):
+                    logger.error(
+                        "Jina returned %d embeddings for %d inputs.",
+                        len(data),
+                        len(batch),
+                    )
+                    last_error = "Embedding count mismatch"
+                    if attempt < max_retries - 1:
+                        time.sleep(retry_delay * (attempt + 1))
+                        continue
+                    return None
+
+                all_embeddings.extend(item["embedding"] for item in data)
+                last_error = None
+                break
+
+            except Exception as exc:
+                last_error = exc
+                logger.warning(
+                    "Jina embedding attempt %d/%d failed: %s",
+                    attempt + 1,
+                    max_retries,
+                    exc,
+                )
+                if attempt < max_retries - 1:
+                    time.sleep(retry_delay * (attempt + 1))
+                    continue
+                logger.error("Jina embedding failed after %d attempts", max_retries)
                 return None
-
-            all_embeddings.extend(item["embedding"] for item in data)
-
-        except Exception as exc:
-            logger.exception("Jina embedding request failed: %s", exc)
-            return None
 
     return all_embeddings
 
@@ -626,8 +650,6 @@ def calculate_confidence(retrieved: List[Dict[str, Any]]) -> float:
 # ---------------------------------------------------------------------------
 
 def analyze_pdf(filepath: str, filename: str) -> Dict[str, Any]:
-    import fitz
-
     try:
         doc = fitz.open(filepath)
         page_count = doc.page_count
@@ -643,22 +665,33 @@ def analyze_pdf(filepath: str, filename: str) -> Dict[str, Any]:
             )
         }
 
-    pages = load_document(filepath)
-    if not pages:
-        return {
-            "error": "No text found in the PDF. The document may be image-based."
-        }
+    with trace_run("pdf_document_indexing", run_type="chain",
+                   inputs={"filename": filename, "page_count": page_count},
+                   tags=["rag", "pdf"]) as indexing_run:
 
-    chunks = chunk_document(pages)
-    if not chunks:
-        return {"error": "Could not create chunks from the document."}
+        pages = load_document(filepath)
+        if not pages:
+            return {
+                "error": "No text found in the PDF. The document may be image-based."
+            }
 
-    embeddings = embed_chunks(chunks)
-    if not embeddings:
-        return {"error": "Failed to embed document. Please try again."}
+        chunks = chunk_document(pages)
+        if not chunks:
+            return {"error": "Could not create chunks from the document."}
 
-    doc_id = str(uuid.uuid4())[:8]
-    store_vectors(doc_id, chunks, embeddings)
+        embeddings = embed_chunks(chunks)
+        if not embeddings:
+            return {"error": "Failed to embed document. Please try again."}
+
+        doc_id = str(uuid.uuid4())[:8]
+        store_vectors(doc_id, chunks, embeddings)
+
+    if indexing_run:
+        indexing_run.end(outputs={
+            "doc_id": doc_id,
+            "chunk_count": len(chunks),
+            "pages_indexed": len(pages),
+        })
 
     full_text = "\n\n".join(page["text"] for page in pages)
     words = re.findall(r"\b\w+\b", full_text)
@@ -682,6 +715,45 @@ def analyze_pdf(filepath: str, filename: str) -> Dict[str, Any]:
     }
 
 
+def index_text(text: str, doc_id: Optional[str] = None) -> Dict[str, Any]:
+    """
+    Index raw text into the vector store (for evaluation).
+    Returns {"doc_id": str, "chunks": int, "chunk_details": list}.
+    """
+    if not doc_id:
+        doc_id = str(uuid.uuid4())[:8]
+
+    pages = [{"page": 1, "text": normalize_text(text)}]
+    chunks = chunk_document(pages)
+    if not chunks:
+        return {"error": "Could not create chunks from text."}
+
+    embeddings = embed_chunks(chunks)
+    if not embeddings:
+        return {"error": "Failed to embed text."}
+
+    store_vectors(doc_id, chunks, embeddings)
+
+    chunk_details = []
+    for chunk in chunks:
+        chunk_details.append({
+            "chunk_id": f"p{chunk['page']}_c{chunk['chunk_id']}",
+            "page": chunk["page"],
+            "section": chunk["section"],
+            "text": chunk["text"],
+        })
+
+    return {"doc_id": doc_id, "chunks": len(chunks), "chunk_details": chunk_details}
+
+
+def get_stored_chunks(doc_id: str) -> List[Dict[str, Any]]:
+    """Return all stored chunks for a doc_id."""
+    store = vector_store.get(doc_id)
+    if not store:
+        return []
+    return store["chunks"]
+
+
 def search(query: str, doc_id: str) -> Dict[str, Any]:
     if doc_id not in vector_store:
         return {"error": "No PDF uploaded. Please upload a PDF first."}
@@ -689,17 +761,32 @@ def search(query: str, doc_id: str) -> Dict[str, Any]:
     if not query or not query.strip():
         return {"error": "Please provide a question."}
 
-    candidates = hybrid_retrieve(query=query, doc_id=doc_id, k=RETRIEVAL_K)
+    with trace_rag_retrieval(query, doc_id, {"chunk_count": len(vector_store.get(doc_id, {}).get("chunks", []))}) as ret_run:
+        candidates = hybrid_retrieve(query=query, doc_id=doc_id, k=RETRIEVAL_K)
 
-    if not candidates:
-        return {
-            "answer": "No relevant information found in the document.",
-            "sources": [],
-        }
+        if not candidates:
+            if ret_run:
+                ret_run.end(outputs={"candidates": 0})
+            return {
+                "answer": "No relevant information found in the document.",
+                "sources": [],
+            }
 
-    retrieved = rerank(query=query, candidates=candidates, final_k=FINAL_K)
+        retrieved = rerank(query=query, candidates=candidates, final_k=FINAL_K)
+
+    if ret_run:
+        ret_run.end(outputs={
+            "candidates": len(candidates),
+            "retrieved_chunks": len(retrieved),
+            "top_page": retrieved[0]["chunk"]["page"] if retrieved else None,
+            "top_hybrid_score": round(retrieved[0].get("hybrid_score", 0) * 100, 1) if retrieved else None,
+        })
+
     context = build_context(retrieved)
-    answer = generate_answer(question=query, context=context)
+
+    with trace_rag_generation(query, len(context), {"retrieved_chunks": len(retrieved)}) as gen_run:
+        answer = generate_answer(question=query, context=context)
+
     confidence = calculate_confidence(retrieved)
 
     sources: List[Dict[str, Any]] = []
@@ -717,6 +804,13 @@ def search(query: str, doc_id: str) -> Dict[str, Any]:
                 if "reranker_score" in item
                 else None
             ),
+        })
+
+    if gen_run:
+        gen_run.end(outputs={
+            "answer_length": len(answer) if answer else 0,
+            "confidence": confidence,
+            "method": "hybrid+reranker",
         })
 
     if answer:

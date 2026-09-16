@@ -26,9 +26,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const pdfResults    = document.getElementById('pdf-results');
 
     // Services
-    const servicesForm    = document.getElementById('services-form');
-    const servicesInput   = document.getElementById('services-input');
-    const servicesResults = document.getElementById('services-results');
+    const servicesForm      = document.getElementById('services-form');
+    const serviceLocation   = document.getElementById('service-location');
+    const serviceCategory   = document.getElementById('service-category');
+    const serviceRequirements = document.getElementById('service-requirements');
+    const serviceSearchBtn  = document.getElementById('service-search-btn');
+    const servicesResults   = document.getElementById('services-results');
 
     // Auth
     const btnLogin  = document.getElementById('btn-login');
@@ -49,16 +52,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const menuToggle     = document.getElementById('menu-toggle');
     const sidebarOverlay = document.getElementById('sidebar-overlay');
 
-    // ── DATA ──────────────────────────────────────────
-    const MOCK_SERVICES = [
-        { title: 'Premium Catering', desc: 'Expert food service for any event size.', price: '$50/plate', category: 'catering' },
-        { title: 'Royal Decoration', desc: 'Elegant decoration for weddings & parties.', price: '$200/event', category: 'decoration' },
-        { title: 'StarBand Live Music', desc: 'Professional live music entertainment.', price: '$500/show', category: 'entertainment' },
-        { title: 'FastFix Plumbing', desc: '24/7 emergency plumbing and pipe repair.', price: '$80/hr', category: 'plumbing' },
-        { title: 'CloudIT Consulting', desc: 'Cloud migration & cybersecurity experts.', price: 'Custom quote', category: 'it' },
-        { title: 'ProPhoto Studio', desc: 'Professional photography for all occasions.', price: '$300/session', category: 'photography' },
-    ];
-
     // State
     let isProcessing = false;
     let sessionId = localStorage.getItem('sb_session') || generateId();
@@ -74,6 +67,7 @@ document.addEventListener('DOMContentLoaded', () => {
     setupSearch();
     setupPDF();
     setupServices();
+    setupProductResearch();
     setupAuth();
     setupMobile();
     setupEventPlanner();
@@ -169,8 +163,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 const errText = `Hello **${userName}**, I'm sorry — I encountered an error. Please try again.`;
                 appendBotMessage(errText);
                 saveHistory(message, errText);
+            } else if (data.type === 'product_research') {
+                appendProductResearchMessage(data);
+                saveHistory(message, data.response || 'Product research results');
             } else {
-                appendBotMessage(data.response);
+                appendBotMessage(data.response, data.run_id);
                 saveHistory(message, data.response);
             }
 
@@ -194,9 +191,10 @@ document.addEventListener('DOMContentLoaded', () => {
         scrollToBottom();
     }
 
-    function appendBotMessage(text) {
+    function appendBotMessage(text, runId) {
         const row = document.createElement('div');
         row.className = 'msg-row bot';
+        const runIdAttr = runId ? `data-run-id="${escapeHtml(runId)}"` : '';
         row.innerHTML = `
             <div class="bot-logo">
                 <svg width="18" height="18" viewBox="0 0 100 100" fill="none">
@@ -207,19 +205,102 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
             <div class="msg-body">
                 <div class="msg-text">${formatMarkdown(text)}</div>
-                <div class="msg-actions">
+                <div class="msg-actions" ${runIdAttr}>
                     <button class="msg-action-btn" title="Copy" onclick="copyText(this, ${JSON.stringify(text)})">
                         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
                     </button>
-                    <button class="msg-action-btn" title="Good response">
+                    <button class="msg-action-btn feedback-btn" title="Helpful" onclick="submitFeedback(this, 1)">
                         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.3a2 2 0 0 0 2-1.7l1.4-9a2 2 0 0 0-2-2.3H14z"/><path d="M7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg>
                     </button>
-                    <button class="msg-action-btn" title="Bad response">
+                    <button class="msg-action-btn feedback-btn" title="Not helpful" onclick="submitFeedback(this, 0)">
                         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.7a2 2 0 0 0-2 1.7l-1.4 9a2 2 0 0 0 2 2.3H10z"/><path d="M17 2h2.3A2 2 0 0 1 21.4 4v7a2 2 0 0 1-2 2H17"/></svg>
                     </button>
                 </div>
             </div>
         `;
+        messagesContainer.appendChild(row);
+        scrollToBottom();
+    }
+
+    function appendProductResearchMessage(data) {
+        const row = document.createElement('div');
+        row.className = 'msg-row bot';
+
+        let html = `
+            <div class="bot-logo">
+                <svg width="18" height="18" viewBox="0 0 100 100" fill="none">
+                    <circle cx="50" cy="50" r="50" fill="white"/>
+                    <path d="M70 35C70 26.7 63.3 20 55 20H45C36.7 20 30 26.7 30 35V45C30 53.3 36.7 60 45 60H55C63.3 60 70 66.7 70 75" stroke="black" stroke-width="12" stroke-linecap="round"/>
+                    <circle cx="45" cy="35" r="5" fill="black"/>
+                </svg>
+            </div>
+            <div class="msg-body">
+                <div class="msg-text">${formatMarkdown(data.response || '')}</div>
+        `;
+
+        // Render product cards
+        const products = data.products || [];
+        const recommendation = data.recommendation || {};
+        const localStores = data.local_stores || [];
+
+        if (Object.keys(recommendation).length > 0) {
+            html += `<div class="product-results-inline">`;
+            const recLabels = {
+                best_overall: '🏆 Best Overall',
+                best_budget: '💰 Best Budget',
+                best_performance: '⚡ Best Performance',
+                best_value: '✅ Best Value',
+            };
+            for (const [key, label] of Object.entries(recLabels)) {
+                const rec = recommendation[key];
+                if (!rec || !rec.product) continue;
+                const p = rec.product;
+                html += `<div class="product-card-inline featured">`;
+                html += `<div class="product-card-header"><span class="product-badge">${label}</span>`;
+                // Rating: only show if from source
+                if (p.rating) html += `<span class="product-rating">⭐ ${p.rating}</span>`;
+                html += `</div>`;
+                html += `<div class="product-card-name">${escapeHtml(p.name)}</div>`;
+                // Price: only show if available
+                if (p.price != null) html += `<div class="product-card-price">₹${Number(p.price).toLocaleString()}</div>`;
+                // Store: only show if available
+                if (p.store_name) html += `<div class="product-card-store">${escapeHtml(p.store_name)}</div>`;
+                // Source confidence
+                if (p.source_confidence) {
+                    const confLabels = { high: 'Trusted', medium: 'Standard', low: 'Verify' };
+                    html += `<div style="font-size:10px;color:#6b7280;margin:2px 0;">${confLabels[p.source_confidence] || ''}</div>`;
+                }
+                if (p.url) html += `<a href="${escapeHtml(p.url)}" target="_blank" class="product-link">View →</a>`;
+                html += `</div>`;
+            }
+            html += `</div>`;
+        }
+
+        if (products.length > 0) {
+            html += `<div class="product-results-inline">`;
+            for (const p of products.slice(0, 6)) {
+                html += `<div class="product-card-inline">`;
+                html += `<div class="product-card-name">${escapeHtml(p.name)}</div>`;
+                // Price: only show if available
+                if (p.price != null) html += `<div class="product-card-price">₹${Number(p.price).toLocaleString()}</div>`;
+                // Store: only show if available
+                if (p.store_name) html += `<div class="product-card-store">${escapeHtml(p.store_name)}</div>`;
+                if (p.url) html += `<a href="${escapeHtml(p.url)}" target="_blank" class="product-link">View →</a>`;
+                html += `</div>`;
+            }
+            html += `</div>`;
+        }
+
+        html += `
+                <div class="msg-actions">
+                    <button class="msg-action-btn" title="Copy" onclick="copyText(this, ${JSON.stringify(data.response || '')})">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                    </button>
+                </div>
+            </div>
+        `;
+
+        row.innerHTML = html;
         messagesContainer.appendChild(row);
         scrollToBottom();
     }
@@ -420,123 +501,305 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ─────────────────────────────────────────────────
-    //  SERVICES
+    //  SERVICES – Real-time Google Places search
     // ─────────────────────────────────────────────────
     function setupServices() {
         if (!servicesForm) return;
-        
-        servicesForm.addEventListener('submit', e => {
+
+        servicesForm.addEventListener('submit', async e => {
             e.preventDefault();
-            const q = servicesInput.value.trim().toLowerCase();
-            if (q === '') {
-                servicesResults.innerHTML = '';
-                return;
-            }
-            const filtered = MOCK_SERVICES.filter(s =>
-                s.title.toLowerCase().includes(q) ||
-                s.desc.toLowerCase().includes(q) ||
-                s.category.includes(q)
-            );
-            renderServiceCards(filtered, q);
-        });
-        
-        // Also search as you type for better UX
-        servicesInput.addEventListener('input', () => {
-            const q = servicesInput.value.trim().toLowerCase();
-            if (q === '') {
-                servicesResults.innerHTML = '';
-                return;
-            }
-            const filtered = MOCK_SERVICES.filter(s =>
-                s.title.toLowerCase().includes(q) ||
-                s.category.includes(q)
-            );
-            renderServiceCards(filtered, q);
+            await searchServices();
         });
     }
 
-    function renderServiceCards(services, query = '') {
-        if (!services.length) {
-            servicesResults.innerHTML = `<div class="loader-text">No services found matching "${escapeHtml(query)}".</div>`;
+    async function searchServices() {
+        const location = (serviceLocation?.value || '').trim();
+        const category = (serviceCategory?.value || '').trim();
+        const requirements = (serviceRequirements?.value || '').trim();
+
+        if (!location) {
+            servicesResults.innerHTML = `<div class="loader-text">Please enter a location.</div>`;
             return;
         }
-        servicesResults.innerHTML = services.map((s, i) => `
-            <div class="result-card" id="svc-card-${i}">
-                <span class="result-card-title">${s.title}</span>
-                <p class="result-card-snippet">${s.desc} — <strong>${s.price}</strong></p>
-                <div class="result-card-actions">
-                    <button class="btn-card" data-idx="${i}">Book Now</button>
-                </div>
-            </div>
-        `).join('');
+        if (!category) {
+            servicesResults.innerHTML = `<div class="loader-text">Please select a service category.</div>`;
+            return;
+        }
 
-        servicesResults.querySelectorAll('.btn-card').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const idx = parseInt(btn.dataset.idx);
-                showBookingForm(services[idx], idx);
+        serviceSearchBtn.disabled = true;
+        servicesResults.innerHTML = `<div class="loader-text">Searching for ${escapeHtml(category)} services in ${escapeHtml(location)}…</div>`;
+
+        try {
+            const res = await fetch('/api/services/search', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    location: location,
+                    service_category: category,
+                    special_requirements: requirements,
+                }),
             });
-        });
+            const data = await res.json();
+
+            if (!res.ok || data.error) {
+                servicesResults.innerHTML = `<div class="loader-text">${escapeHtml(data.error || 'Search failed. Please try again.')}</div>`;
+                return;
+            }
+
+            if (!data.results || data.results.length === 0) {
+                servicesResults.innerHTML = `<div class="loader-text">No matching services found in ${escapeHtml(location)} for your requirements.</div>`;
+                return;
+            }
+
+            renderServiceResults(data);
+        } catch (err) {
+            servicesResults.innerHTML = `<div class="loader-text">Service search is temporarily unavailable. Please try again.</div>`;
+        } finally {
+            serviceSearchBtn.disabled = false;
+        }
     }
 
-    function showBookingForm(service, idx) {
-        const card = document.getElementById(`svc-card-${idx}`);
-        if (!card) return;
-        card.innerHTML = `
-            <span class="result-card-title">${service.title}</span>
-            <p class="result-card-snippet">${service.desc} — <strong>${service.price}</strong></p>
-            <form class="booking-form" id="booking-form-${idx}">
-                <input type="text" class="booking-input" name="name" placeholder="Full Name" required />
-                <input type="tel" class="booking-input" name="phone" placeholder="Phone Number" required pattern="[0-9+\\-\\s]{7,15}" />
-                <input type="email" class="booking-input" name="email" placeholder="Email Address" required />
-                <input type="date" class="booking-input" name="date" required />
-                <div class="booking-actions">
-                    <button type="submit" class="btn-card">Confirm Booking</button>
-                    <button type="button" class="btn-card btn-card-cancel" data-idx="${idx}">Cancel</button>
+    function renderServiceResults(data) {
+        const { results, count, location, timestamp } = data;
+        const loc = location || (data.query && data.query.location) || '';
+
+        let html = `<div class="service-results-header">
+            <strong>${count} matching service${count !== 1 ? 's' : ''}</strong> found near ${escapeHtml(loc)}
+        </div>`;
+
+        results.forEach(s => {
+            const ratingHtml = s.rating
+                ? `<span class="star">★</span> ${s.rating}`
+                : '';
+            const addressRow = s.address
+                ? `<div class="meta-row"><span class="meta-icon">📍</span><span>${escapeHtml(s.address)}</span></div>`
+                : '';
+            const phoneRow = s.phone
+                ? `<div class="meta-row"><span class="meta-icon">📞</span><span>${escapeHtml(s.phone)}</span></div>`
+                : '';
+            const descRow = s.description
+                ? `<div class="meta-row service-card-desc"><span>${escapeHtml(s.description)}</span></div>`
+                : '';
+
+            let actionsHtml = '';
+            if (s.website) actionsHtml += `<a href="${escapeHtml(s.website)}" target="_blank" rel="noopener" class="secondary">🌐 Website</a>`;
+            if (s.phone) actionsHtml += `<a href="tel:${escapeHtml(s.phone)}" class="secondary">📞 Call</a>`;
+            if (s.source_url && s.source_url !== s.website) actionsHtml += `<a href="${escapeHtml(s.source_url)}" target="_blank" rel="noopener" class="secondary">🔗 View Source</a>`;
+
+            html += `
+            <div class="service-card">
+                <div class="service-card-header">
+                    <div class="service-card-name">${escapeHtml(s.name)}</div>
+                    <div class="service-card-rating">${ratingHtml}</div>
                 </div>
-            </form>
-        `;
-        card.querySelector(`#booking-form-${idx}`).addEventListener('submit', e => {
+                <div class="service-card-meta">
+                    ${addressRow}
+                    ${phoneRow}
+                    ${descRow}
+                </div>
+                <div class="service-card-actions">${actionsHtml}</div>
+            </div>`;
+        });
+
+        if (timestamp) {
+            html += `<div class="service-timestamp">Web results fetched at ${escapeHtml(timestamp)}</div>`;
+        }
+
+        servicesResults.innerHTML = html;
+    }
+
+    // ─────────────────────────────────────────────────
+    //  PRODUCT RESEARCH
+    // ─────────────────────────────────────────────────
+    function setupProductResearch() {
+        const productsForm = document.getElementById('products-form');
+        const productsInput = document.getElementById('products-input');
+        const productsResults = document.getElementById('products-results');
+        if (!productsForm) return;
+
+        productsForm.addEventListener('submit', async e => {
             e.preventDefault();
-            const fd = new FormData(e.target);
-            showBookingConfirmation(service, {
-                name: fd.get('name'),
-                phone: fd.get('phone'),
-                email: fd.get('email'),
-                date: fd.get('date'),
-            }, idx);
-        });
-        card.querySelector(`.btn-card-cancel`).addEventListener('click', () => {
-            renderServiceCards([service], '');
+            const q = productsInput.value.trim();
+            if (!q) return;
+
+            productsResults.innerHTML = `<div class="loader-text">Researching products… This may take a moment.</div>`;
+
+            try {
+                const res = await fetch('/api/products/search', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ query: q })
+                });
+                const data = await res.json();
+
+                if (!res.ok || data.error) {
+                    productsResults.innerHTML = `<div class="loader-text">${escapeHtml(data.error || 'Product search failed.')}</div>`;
+                    return;
+                }
+
+                renderProductResults(data, productsResults);
+            } catch {
+                productsResults.innerHTML = `<div class="loader-text">Product search failed. Please try again.</div>`;
+            }
         });
     }
 
-    function showBookingConfirmation(service, details, idx) {
-        const card = document.getElementById(`svc-card-${idx}`);
-        if (!card) return;
-        const dateStr = new Date(details.date + 'T00:00:00').toLocaleDateString('en-US', {
-            weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
-        });
-        card.innerHTML = `
-            <div class="booking-confirmed">
-                <div class="booking-check">
-                    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>
-                </div>
-                <span class="result-card-title" style="color:var(--accent);">Booking Confirmed</span>
-                <div class="booking-details">
-                    <p><strong>Service:</strong> ${service.title}</p>
-                    <p><strong>Name:</strong> ${escapeHtml(details.name)}</p>
-                    <p><strong>Phone:</strong> ${escapeHtml(details.phone)}</p>
-                    <p><strong>Email:</strong> ${escapeHtml(details.email)}</p>
-                    <p><strong>Date:</strong> ${dateStr}</p>
-                    <p><strong>Cost:</strong> ${service.price}</p>
-                </div>
-                <p class="booking-note">A confirmation has been sent to ${escapeHtml(details.email)}. Our team will contact you shortly.</p>
-                <button class="btn-card" id="book-another-${idx}">Book Another Service</button>
-            </div>
-        `;
-        document.getElementById(`book-another-${idx}`).addEventListener('click', () => {
-            renderServiceCards(MOCK_SERVICES.filter(s => s.title === service.title), service.category);
-        });
+    function renderProductResults(data, container) {
+        const products = data.products || [];
+        const localStores = data.local_stores || [];
+        const recommendation = data.recommendation || {};
+        const request = data.request || {};
+
+        let html = '';
+
+        // Request summary
+        const budgetMax = request.budget_max;
+        const brand = request.brand;
+        const category = request.category || request.product_query;
+        html += `<div class="product-summary">`;
+        html += `<strong>Searching for:</strong> ${escapeHtml(category)}`;
+        if (brand) html += ` | <strong>Brand:</strong> ${escapeHtml(brand)}`;
+        if (budgetMax) html += ` | <strong>Budget:</strong> Under ₹${budgetMax.toLocaleString()}`;
+        if (request.required_features && request.required_features.length) {
+            html += ` | <strong>Features:</strong> ${escapeHtml(request.required_features.join(', '))}`;
+        }
+        html += `</div>`;
+
+        // No results message
+        if (products.length === 0 && localStores.length === 0) {
+            html += `<div class="loader-text">I couldn't find any ${escapeHtml(category)}s matching your criteria from the available sources.</div>`;
+            html += `<div class="loader-text" style="margin-top:8px;font-size:13px;color:var(--text-muted);">`;
+            html += `<strong>Suggestions:</strong><br>`;
+            html += `- Try searching for '${escapeHtml(brand ? brand + ' ' : '')}${escapeHtml(category)}' with different features<br>`;
+            html += `- Broaden your budget range<br>`;
+            if (brand) html += `- Check the official ${escapeHtml(brand)} website for the latest models`;
+            html += `</div>`;
+            container.innerHTML = html;
+            return;
+        }
+
+        // Recommendations
+        const recLabels = {
+            best_overall: '🏆 Best Overall',
+            best_budget: '💰 Best Budget',
+            best_performance: '⚡ Best Performance',
+            best_value: '✅ Best Value',
+        };
+
+        for (const [key, label] of Object.entries(recLabels)) {
+            const rec = recommendation[key];
+            if (!rec || !rec.product) continue;
+            const p = rec.product;
+            html += `<div class="product-card featured">`;
+            html += `<div class="product-card-header">`;
+            html += `<span class="product-badge">${label}</span>`;
+            // Rating: only show if from source
+            if (p.rating) html += `<span class="product-rating">⭐ ${p.rating}</span>`;
+            html += `</div>`;
+            html += `<div class="product-card-name">${escapeHtml(p.name)}</div>`;
+            // Price: only show if available
+            if (p.price != null) {
+                html += `<div class="product-card-price">₹${Number(p.price).toLocaleString()}</div>`;
+            }
+            // Store: only show if available
+            if (p.store_name) html += `<div class="product-card-store">${escapeHtml(p.store_name)}</div>`;
+            // Source confidence indicator
+            if (p.source_confidence) {
+                const confColors = { high: '#10a37f', medium: '#f59e0b', low: '#6b7280' };
+                const confLabels = { high: 'Trusted source', medium: 'Standard source', low: 'Verify independently' };
+                html += `<div style="font-size:11px;color:${confColors[p.source_confidence] || '#6b7280'};margin:4px 0;">`;
+                html += `${confLabels[p.source_confidence] || p.source_confidence}`;
+                html += `</div>`;
+            }
+            // Specifications
+            if (p.specifications && Object.keys(p.specifications).length) {
+                html += `<div class="product-specs">`;
+                for (const [k, v] of Object.entries(p.specifications)) {
+                    html += `<span class="spec-tag">${escapeHtml(k)}: ${escapeHtml(v)}</span>`;
+                }
+                html += `</div>`;
+            }
+            // Reasons
+            if (rec.reasons && rec.reasons.length) {
+                html += `<div class="product-reasons">`;
+                for (const reason of rec.reasons) {
+                    html += `<div class="reason-item">✓ ${escapeHtml(reason)}</div>`;
+                }
+                html += `</div>`;
+            }
+            // Link
+            if (p.url) html += `<a href="${escapeHtml(p.url)}" target="_blank" class="product-link">View Product →</a>`;
+            html += `</div>`;
+        }
+
+        // All products
+        if (products.length > 0) {
+            html += `<div class="product-section-title">All Products Found (${products.length})</div>`;
+            html += `<div class="product-grid">`;
+            for (const p of products.slice(0, 12)) {
+                html += renderProductCard(p);
+            }
+            html += `</div>`;
+        }
+
+        // Local stores
+        if (localStores.length > 0) {
+            html += `<div class="product-section-title">Local Stores</div>`;
+            html += `<div class="local-stores-note">Local availability could not be verified. Contact the store before visiting.</div>`;
+            html += `<div class="product-grid">`;
+            for (const s of localStores.slice(0, 6)) {
+                html += `<div class="product-card local">`;
+                html += `<div class="product-card-name">${escapeHtml(s.name)}</div>`;
+                if (s.location) html += `<div class="product-card-store">${escapeHtml(s.location)}</div>`;
+                if (s.phone) html += `<div class="product-card-store">${escapeHtml(s.phone)}</div>`;
+                if (s.url) html += `<a href="${escapeHtml(s.url)}" target="_blank" class="product-link">View Store →</a>`;
+                html += `</div>`;
+            }
+            html += `</div>`;
+        }
+
+        container.innerHTML = html;
+    }
+
+    function renderProductCard(p) {
+        let html = `<div class="product-card">`;
+        html += `<div class="product-card-header">`;
+        if (p.source_type === 'local') html += `<span class="product-source local">Local</span>`;
+        else html += `<span class="product-source online">Online</span>`;
+        // Rating: only show if from source
+        if (p.rating) html += `<span class="product-rating">⭐ ${p.rating}</span>`;
+        html += `</div>`;
+        html += `<div class="product-card-name">${escapeHtml(p.name)}</div>`;
+        // Price: only show if available (never fabricate)
+        if (p.price != null) {
+            html += `<div class="product-card-price">₹${Number(p.price).toLocaleString()}`;
+            if (p.original_price && p.original_price > p.price) {
+                html += ` <span class="product-original-price">₹${Number(p.original_price).toLocaleString()}</span>`;
+            }
+            html += `</div>`;
+        }
+        // Store: only show if available
+        if (p.store_name) html += `<div class="product-card-store">${escapeHtml(p.store_name)}</div>`;
+        // Source confidence
+        if (p.source_confidence) {
+            const confColors = { high: '#10a37f', medium: '#f59e0b', low: '#6b7280' };
+            const confLabels = { high: 'Trusted', medium: 'Standard', low: 'Verify' };
+            html += `<div style="font-size:10px;color:${confColors[p.source_confidence] || '#6b7280'};margin:2px 0;">`;
+            html += `${confLabels[p.source_confidence] || p.source_confidence}`;
+            html += `</div>`;
+        }
+        // Specifications
+        if (p.specifications && Object.keys(p.specifications).length) {
+            html += `<div class="product-specs">`;
+            for (const [k, v] of Object.entries(p.specifications)) {
+                html += `<span class="spec-tag">${escapeHtml(k)}: ${escapeHtml(v)}</span>`;
+            }
+            html += `</div>`;
+        }
+        // Link
+        if (p.url) html += `<a href="${escapeHtml(p.url)}" target="_blank" class="product-link">View →</a>`;
+        html += `</div>`;
+        return html;
     }
 
     // ─────────────────────────────────────────────────
@@ -925,6 +1188,43 @@ document.addEventListener('DOMContentLoaded', () => {
             btn.title = 'Copied!';
             setTimeout(() => { btn.title = 'Copy'; }, 2000);
         } catch {}
+    };
+
+    // ─────────────────────────────────────────────────
+    //  USER FEEDBACK (global so onclick can call it)
+    // ─────────────────────────────────────────────────
+    window.submitFeedback = async function (btn, score) {
+        const actionsDiv = btn.closest('.msg-actions');
+        if (!actionsDiv) return;
+
+        const runId = actionsDiv.dataset.runId;
+        if (!runId) {
+            btn.title = 'No run ID';
+            setTimeout(() => { btn.title = score === 1 ? 'Helpful' : 'Not helpful'; }, 2000);
+            return;
+        }
+
+        try {
+            const res = await fetch('/api/feedback', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ run_id: runId, score: score })
+            });
+
+            if (res.ok) {
+                btn.title = 'Thanks!';
+                btn.style.color = '#10a37f';
+                // Disable both feedback buttons after submission
+                const feedbackBtns = actionsDiv.querySelectorAll('.feedback-btn');
+                feedbackBtns.forEach(b => { b.disabled = true; b.style.opacity = '0.5'; });
+            } else {
+                btn.title = 'Failed to submit';
+            }
+        } catch {
+            btn.title = 'Failed to submit';
+        }
+
+        setTimeout(() => { btn.title = score === 1 ? 'Helpful' : 'Not helpful'; }, 2000);
     };
 
     // ─────────────────────────────────────────────────
