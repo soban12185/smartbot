@@ -1,0 +1,266 @@
+{
+  "summary": {
+    "total_examples": 5,
+    "valid_examples": 5,
+    "failed_examples": 0,
+    "scores_available": 4,
+    "elapsed_seconds": 31.72,
+    "metrics": {
+      "answer_correctness": 0.9,
+      "answer_relevance": 1.0,
+      "faithfulness": 1.0,
+      "retrieval_hit_rate": 1.0,
+      "overall": 0.971
+    },
+    "retrieval_note": "Retrieval metrics are simulated (reference_context used as retrieved chunk).",
+    "failed_indices": []
+  },
+  "details": [
+    {
+      "index": 1,
+      "question": "What is the capital of France?",
+      "reference_answer": "The capital of France is Paris.",
+      "generated_answer": "Paris.",
+      "ground_truth_chunks": [
+        "France is a country in Western Europe. Its capital city is Paris, which is also the largest city in the country."
+      ],
+      "metadata": {
+        "document_name": "example_document.pdf",
+        "page_number": 1,
+        "difficulty": "easy",
+        "type": "factual"
+      },
+      "evaluation": {
+        "correctness": {
+          "score": 1.0,
+          "reasoning": "The generated answer 'Paris' correctly states the capital of France, matching the reference answer.",
+          "error": null
+        },
+        "relevance": {
+          "score": 1.0,
+          "reasoning": "The answer directly and completely provides the capital of France, which is exactly what the question asks.",
+          "error": null
+        },
+        "faithfulness": {
+          "score": 1.0,
+          "reasoning": "The answer 'Paris' directly matches the capital city stated in the context, with no contradictory or unsupported information.",
+          "error": null
+        },
+        "retrieval": {
+          "recall": 1.0,
+          "hit_rate": 1.0,
+          "precision": 1.0,
+          "is_simulated": true,
+          "error": null
+        },
+        "average_score": 1.0,
+        "scores_available": 3
+      },
+      "retrieval": {
+        "chunks_used": [
+          "France is a country in Western Europe. Its capital city is Paris, which is also the largest city in the country."
+        ],
+        "is_simulated": true,
+        "note": "Retrieval is simulated (reference_context used as retrieved chunk). Real retrieval requires a doc_id."
+      },
+      "error": null
+    },
+    {
+      "index": 2,
+      "question": "What is the recommended chunk size for text splitting?",
+      "reference_answer": "The recommended chunk size is 800 characters with an overlap of 150 characters.",
+      "generated_answer": "The recommended chunk size for text splitting is **800 characters**.",
+      "ground_truth_chunks": [
+        "For optimal retrieval performance, we recommend splitting text into chunks of 800 characters with an overlap of 150 characters between consecutive chunks."
+      ],
+      "metadata": {
+        "document_name": "technical_guide.pdf",
+        "page_number": 5,
+        "difficulty": "medium",
+        "type": "technical"
+      },
+      "evaluation": {
+        "correctness": {
+          "score": 0.6,
+          "reasoning": "The generated answer correctly states the recommended chunk size of 800 characters, matching the reference. However, it omits the additional detail about the required overlap of 150 characters, making it only partially correct.",
+          "error": null
+        },
+        "relevance": {
+          "score": 1.0,
+          "reasoning": "The answer directly provides a specific recommended chunk size, fully addressing the question.",
+          "error": null
+        },
+        "faithfulness": {
+          "score": 1.0,
+          "reasoning": "The answer correctly states the recommended chunk size of 800 characters, which is directly mentioned in the context. No contradictory or unsupported information is present.",
+          "error": null
+        },
+        "retrieval": {
+          "recall": 1.0,
+          "hit_rate": 1.0,
+          "precision": 1.0,
+          "is_simulated": true,
+          "error": null
+        },
+        "average_score": 0.867,
+        "scores_available": 3
+      },
+      "retrieval": {
+        "chunks_used": [
+          "For optimal retrieval performance, we recommend splitting text into chunks of 800 characters with an overlap of 150 characters between consecutive chunks."
+        ],
+        "is_simulated": true,
+        "note": "Retrieval is simulated (reference_context used as retrieved chunk). Real retrieval requires a doc_id."
+      },
+      "error": null
+    },
+    {
+      "index": 3,
+      "question": "What are the key differences between LangChain and LangGraph?",
+      "reference_answer": "LangChain is a framework for building LLM applications with chains and agents, while LangGraph is a library for building stateful, multi-actor applications with LLMs using graph-based workflows.",
+      "generated_answer": "LangChain supplies the core abstractions for building LLM\u2011powered applications, while LangGraph builds on top of LangChain by adding graph\u2011based workflow orchestration that enables more complex, stateful applications.",
+      "ground_truth_chunks": [
+        "LangChain provides the foundational abstractions for LLM-powered applications.",
+        "LangGraph extends LangChain by adding graph-based workflow orchestration for complex, stateful applications."
+      ],
+      "metadata": {
+        "document_name": "framework_comparison.pdf",
+        "page_number": 12,
+        "difficulty": "hard",
+        "type": "comparison"
+      },
+      "evaluation": {
+        "correctness": {
+          "score": null,
+          "reasoning": "",
+          "error": "LLM judge unavailable (set GROQ_API_KEY or GOOGLE_API_KEY)"
+        },
+        "relevance": {
+          "score": 1.0,
+          "reasoning": "The answer directly states the main distinction: LangChain provides core abstractions, while LangGraph extends it with graph\u2011based workflow orchestration for more complex, stateful applications.",
+          "error": null
+        },
+        "faithfulness": {
+          "score": 1.0,
+          "reasoning": "The answer restates the context accurately, mentioning LangChain's core abstractions for LLM-powered apps and LangGraph's extension with graph-based workflow orchestration for complex, stateful applications, without adding unsupported information.",
+          "error": null
+        },
+        "retrieval": {
+          "recall": 1.0,
+          "hit_rate": 1.0,
+          "precision": 1.0,
+          "is_simulated": true,
+          "error": null
+        },
+        "average_score": 1.0,
+        "scores_available": 2
+      },
+      "retrieval": {
+        "chunks_used": [
+          "LangChain provides the foundational abstractions for LLM-powered applications. LangGraph extends LangChain by adding graph-based workflow orchestration for complex, stateful applications."
+        ],
+        "is_simulated": true,
+        "note": "Retrieval is simulated (reference_context used as retrieved chunk). Real retrieval requires a doc_id."
+      },
+      "error": null
+    },
+    {
+      "index": 4,
+      "question": "How do I upload a PDF to SmartBot?",
+      "reference_answer": "You can upload a PDF by clicking the 'PDF Tools' section in the sidebar, then dragging and dropping your PDF file or clicking to browse and select it.",
+      "generated_answer": "To upload a PDF to SmartBot:\n\n1. Click on **\u201cPDF Tools\u201d** in the left sidebar.  \n2. Drag and drop your PDF file onto the upload area, or click the area to browse and select the file.  \n3. Wait for the document to be processed.",
+      "ground_truth_chunks": [
+        "To upload a PDF document to SmartBot: 1. Click on 'PDF Tools' in the left sidebar. 2. Drag and drop your PDF file onto the upload area, or click to browse. 3. Wait for the document to be processed."
+      ],
+      "metadata": {
+        "document_name": "user_manual.pdf",
+        "page_number": 3,
+        "difficulty": "easy",
+        "type": "procedural"
+      },
+      "evaluation": {
+        "correctness": {
+          "score": 1.0,
+          "reasoning": "The generated answer accurately describes clicking the PDF Tools section in the sidebar and using drag-and-drop or browse to upload a PDF, matching the reference. The extra note about waiting for processing does not contradict the reference.",
+          "error": null
+        },
+        "relevance": {
+          "score": 1.0,
+          "reasoning": "The answer directly explains the steps to upload a PDF to SmartBot, fully addressing the user's question.",
+          "error": null
+        },
+        "faithfulness": {
+          "score": 1.0,
+          "reasoning": "The answer exactly mirrors the three steps described in the context, using synonymous phrasing but no new or contradictory information.",
+          "error": null
+        },
+        "retrieval": {
+          "recall": 1.0,
+          "hit_rate": 1.0,
+          "precision": 1.0,
+          "is_simulated": true,
+          "error": null
+        },
+        "average_score": 1.0,
+        "scores_available": 3
+      },
+      "retrieval": {
+        "chunks_used": [
+          "To upload a PDF document to SmartBot: 1. Click on 'PDF Tools' in the left sidebar. 2. Drag and drop your PDF file onto the upload area, or click to browse. 3. Wait for the document to be processed."
+        ],
+        "is_simulated": true,
+        "note": "Retrieval is simulated (reference_context used as retrieved chunk). Real retrieval requires a doc_id."
+      },
+      "error": null
+    },
+    {
+      "index": 5,
+      "question": "What factors affect RAG retrieval quality?",
+      "reference_answer": "Key factors include chunk size, embedding quality, retrieval method (semantic vs keyword), reranking quality, and the relevance of the source documents.",
+      "generated_answer": "RAG retrieval quality is affected by:\n\n1. Chunk size and overlap strategy  \n2. Embedding model quality  \n3. Hybrid retrieval weights (semantic vs\u202fBM25)  \n4. Reranker effectiveness  \n5. Source document quality and relevance",
+      "ground_truth_chunks": [
+        "RAG retrieval quality is influenced by: 1) Chunk size and overlap strategy, 2) Embedding model quality, 3) Hybrid retrieval weights (semantic vs BM25), 4) Reranker effectiveness, 5) Source document quality and relevance."
+      ],
+      "metadata": {
+        "document_name": "rag_best_practices.pdf",
+        "page_number": 8,
+        "difficulty": "hard",
+        "type": "analytical"
+      },
+      "evaluation": {
+        "correctness": {
+          "score": 1.0,
+          "reasoning": "The generated answer lists all the key factors from the reference (chunk size, embedding quality, retrieval method, reranking quality, source document relevance) and adds only minor elaborations, matching the reference content accurately.",
+          "error": null
+        },
+        "relevance": {
+          "score": 1.0,
+          "reasoning": "The answer directly lists key factors that influence RAG retrieval quality, directly addressing the question without irrelevant content.",
+          "error": null
+        },
+        "faithfulness": {
+          "score": 1.0,
+          "reasoning": "The generated answer exactly repeats the five factors listed in the context without adding or omitting any information, thus it is fully supported.",
+          "error": null
+        },
+        "retrieval": {
+          "recall": 1.0,
+          "hit_rate": 1.0,
+          "precision": 1.0,
+          "is_simulated": true,
+          "error": null
+        },
+        "average_score": 1.0,
+        "scores_available": 3
+      },
+      "retrieval": {
+        "chunks_used": [
+          "RAG retrieval quality is influenced by: 1) Chunk size and overlap strategy, 2) Embedding model quality, 3) Hybrid retrieval weights (semantic vs BM25), 4) Reranker effectiveness, 5) Source document quality and relevance."
+        ],
+        "is_simulated": true,
+        "note": "Retrieval is simulated (reference_context used as retrieved chunk). Real retrieval requires a doc_id."
+      },
+      "error": null
+    }
+  ]
+}

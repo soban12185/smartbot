@@ -1,0 +1,357 @@
+{
+  "summary": {
+    "total_examples": 5,
+    "passed": 5,
+    "failed": 0,
+    "errors": 0,
+    "elapsed_seconds": 77.97,
+    "llm_metrics": {
+      "answer_correctness": 0.88,
+      "answer_relevance": 1.0,
+      "faithfulness": 1.0,
+      "overall": 0.96
+    },
+    "retrieval_metrics": {
+      "recall_at_k": 1.0,
+      "hit_rate_at_k": 1.0,
+      "precision_at_k": 0.24,
+      "mrr": 1.0,
+      "k": 5,
+      "examples_with_real_retrieval": 5,
+      "total_examples": 5,
+      "status": "EVALUATED"
+    },
+    "passed_indices": [
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "failed_indices": [],
+    "error_indices": []
+  },
+  "details": [
+    {
+      "index": 1,
+      "question": "What is the capital of France?",
+      "reference_answer": "The capital of France is Paris.",
+      "generated_answer": "Paris\u3010Source\u202f1,\u202fPage\u202f1\u3011",
+      "ground_truth_chunks": [
+        "France is a country in Western Europe. Its capital city is Paris, which is also the largest city in the country."
+      ],
+      "metadata": {
+        "difficulty": "easy",
+        "type": "factual",
+        "document_name": "geography.pdf"
+      },
+      "evaluation": {
+        "correctness": {
+          "score": 1.0,
+          "reasoning": "The generated answer correctly states that the capital of France is Paris, matching the reference answer.",
+          "error": null
+        },
+        "relevance": {
+          "score": 1.0,
+          "reasoning": "The answer directly provides the capital of France ('Paris'), fully addressing the question.",
+          "error": null
+        },
+        "faithfulness": {
+          "score": 1.0,
+          "reasoning": "The answer 'Paris' directly matches the context stating that Paris is the capital city of France, with no contradictory or unsupported information.",
+          "error": null
+        },
+        "retrieval": {
+          "hit_rate": 1.0,
+          "recall": 1.0,
+          "precision": 0.2,
+          "mrr": 1.0,
+          "matched_gt_count": 1,
+          "total_gt": 1,
+          "relevant_in_top_k": 1,
+          "first_relevant_rank": 1,
+          "k": 5,
+          "error": null
+        },
+        "average_score": 1.0,
+        "scores_available": 3,
+        "has_errors": false,
+        "error_details": []
+      },
+      "retrieval_detail": {
+        "retrieved_chunks": [
+          {
+            "chunk_id": 0,
+            "page": 1,
+            "section": "Page content",
+            "text": "France is a country in Western Europe. Its capital city is Paris, which is also the largest city in the country.",
+            "semantic_score": 70.2,
+            "bm25_score": 1.466,
+            "hybrid_score": 100.0,
+            "reranker_score": 0.847
+          }
+        ],
+        "total_retrieved": 1
+      },
+      "error": null,
+      "status": "PASS"
+    },
+    {
+      "index": 2,
+      "question": "What is the recommended chunk size for text splitting?",
+      "reference_answer": "The recommended chunk size is 800 characters with an overlap of 150 characters.",
+      "generated_answer": "The recommended chunk size is **800 characters**\u3010Source\u202f1,\u202fPage\u202f1\u3011.",
+      "ground_truth_chunks": [
+        "For optimal retrieval performance, we recommend splitting text into chunks of 800 characters with an overlap of 150 characters between consecutive chunks."
+      ],
+      "metadata": {
+        "difficulty": "easy",
+        "type": "factual",
+        "document_name": "technical_guide.pdf"
+      },
+      "evaluation": {
+        "correctness": {
+          "score": 0.6,
+          "reasoning": "The generated answer correctly states the chunk size of 800 characters, matching the reference, but omits the required overlap of 150 characters, making it only partially correct.",
+          "error": null
+        },
+        "relevance": {
+          "score": 1.0,
+          "reasoning": "The answer directly provides the recommended chunk size, exactly addressing the question.",
+          "error": null
+        },
+        "faithfulness": {
+          "score": 1.0,
+          "reasoning": "The answer correctly states the recommended chunk size of 800 characters, which directly matches the information provided in the context.",
+          "error": null
+        },
+        "retrieval": {
+          "hit_rate": 1.0,
+          "recall": 1.0,
+          "precision": 0.2,
+          "mrr": 1.0,
+          "matched_gt_count": 1,
+          "total_gt": 1,
+          "relevant_in_top_k": 1,
+          "first_relevant_rank": 1,
+          "k": 5,
+          "error": null
+        },
+        "average_score": 0.867,
+        "scores_available": 3,
+        "has_errors": false,
+        "error_details": []
+      },
+      "retrieval_detail": {
+        "retrieved_chunks": [
+          {
+            "chunk_id": 0,
+            "page": 1,
+            "section": "Page content",
+            "text": "For optimal retrieval performance, we recommend splitting text into chunks of 800 characters with an overlap of 150 characters between consecutive chunks.",
+            "semantic_score": 78.8,
+            "bm25_score": 0.863,
+            "hybrid_score": 100.0,
+            "reranker_score": 0.867
+          }
+        ],
+        "total_retrieved": 1
+      },
+      "error": null,
+      "status": "PASS"
+    },
+    {
+      "index": 3,
+      "question": "What embedding model does SmartBot use?",
+      "reference_answer": "SmartBot uses the Jina embeddings v3 model (jina-embeddings-v3) for text embeddings.",
+      "generated_answer": "SmartBot uses the **jina\u2011embeddings\u2011v3** model from Jina AI\u3010Source\u202f1,\u202fPage\u202f1\u3011.",
+      "ground_truth_chunks": [
+        "SmartBot employs the jina-embeddings-v3 model from Jina AI for generating text embeddings used in the hybrid RAG retrieval pipeline."
+      ],
+      "metadata": {
+        "difficulty": "easy",
+        "type": "factual",
+        "document_name": "architecture_guide.pdf"
+      },
+      "evaluation": {
+        "correctness": {
+          "score": 1.0,
+          "reasoning": "The generated answer correctly states that SmartBot uses the jina-embeddings-v3 model, matching the reference answer exactly.",
+          "error": null
+        },
+        "relevance": {
+          "score": 1.0,
+          "reasoning": "The answer directly states the embedding model used by SmartBot, exactly addressing the question.",
+          "error": null
+        },
+        "faithfulness": {
+          "score": 1.0,
+          "reasoning": "The answer directly restates the information from the context that SmartBot uses the jina-embeddings-v3 model from Jina AI, with no additional or contradictory claims.",
+          "error": null
+        },
+        "retrieval": {
+          "hit_rate": 1.0,
+          "recall": 1.0,
+          "precision": 0.2,
+          "mrr": 1.0,
+          "matched_gt_count": 1,
+          "total_gt": 1,
+          "relevant_in_top_k": 1,
+          "first_relevant_rank": 1,
+          "k": 5,
+          "error": null
+        },
+        "average_score": 1.0,
+        "scores_available": 3,
+        "has_errors": false,
+        "error_details": []
+      },
+      "retrieval_detail": {
+        "retrieved_chunks": [
+          {
+            "chunk_id": 0,
+            "page": 1,
+            "section": "Page content",
+            "text": "SmartBot employs the jina-embeddings-v3 model from Jina AI for generating text embeddings used in the hybrid RAG retrieval pipeline.",
+            "semantic_score": 68.8,
+            "bm25_score": 0.575,
+            "hybrid_score": 100.0,
+            "reranker_score": 0.769
+          }
+        ],
+        "total_retrieved": 1
+      },
+      "error": null,
+      "status": "PASS"
+    },
+    {
+      "index": 4,
+      "question": "What is LangSmith?",
+      "reference_answer": "LangSmith is a platform for debugging, testing, evaluating, and monitoring LLM applications.",
+      "generated_answer": "LangSmith is an observability and evaluation platform for LLM applications\u3010Source\u202f1,\u202fPage\u202f1\u3011.",
+      "ground_truth_chunks": [
+        "LangSmith is an observability and evaluation platform for LLM applications.",
+        "It enables developers to trace runs, evaluate responses, monitor production usage, and iteratively improve their applications."
+      ],
+      "metadata": {
+        "difficulty": "easy",
+        "type": "definition",
+        "document_name": "langsmith_overview.pdf"
+      },
+      "evaluation": {
+        "correctness": {
+          "score": 0.8,
+          "reasoning": "The generated answer correctly identifies LangSmith as a platform for observability (covering monitoring and debugging) and evaluation, matching most of the reference description. It omits explicit mention of testing, so it's mostly correct with a minor omission.",
+          "error": null
+        },
+        "relevance": {
+          "score": 1.0,
+          "reasoning": "The answer directly defines LangSmith as an observability and evaluation platform for LLM applications, fully addressing the question.",
+          "error": null
+        },
+        "faithfulness": {
+          "score": 1.0,
+          "reasoning": "The answer directly repeats the statement from the context that LangSmith is an observability and evaluation platform for LLM applications, with no additional or contradictory information.",
+          "error": null
+        },
+        "retrieval": {
+          "hit_rate": 1.0,
+          "recall": 1.0,
+          "precision": 0.4,
+          "mrr": 1.0,
+          "matched_gt_count": 2,
+          "total_gt": 2,
+          "relevant_in_top_k": 2,
+          "first_relevant_rank": 1,
+          "k": 5,
+          "error": null
+        },
+        "average_score": 0.933,
+        "scores_available": 3,
+        "has_errors": false,
+        "error_details": []
+      },
+      "retrieval_detail": {
+        "retrieved_chunks": [
+          {
+            "chunk_id": 0,
+            "page": 1,
+            "section": "Page content",
+            "text": "LangSmith is an observability and evaluation platform for LLM applications. It enables developers to trace runs, evaluate responses, monitor production usage, and iteratively improve their applications.",
+            "semantic_score": 84.5,
+            "bm25_score": 0.575,
+            "hybrid_score": 100.0,
+            "reranker_score": 0.846
+          }
+        ],
+        "total_retrieved": 1
+      },
+      "error": null,
+      "status": "PASS"
+    },
+    {
+      "index": 5,
+      "question": "What is the maximum number of PDF pages supported?",
+      "reference_answer": "SmartBot supports PDF files with up to 20 pages.",
+      "generated_answer": "The application supports PDF files with up to **20 pages** only\u3010Source\u202f1,\u202fPage\u202f1\u3011.",
+      "ground_truth_chunks": [
+        "This application supports PDF files with up to 20 pages only."
+      ],
+      "metadata": {
+        "difficulty": "easy",
+        "type": "numerical",
+        "document_name": "smartbot_docs.pdf"
+      },
+      "evaluation": {
+        "correctness": {
+          "score": 1.0,
+          "reasoning": "The generated answer accurately restates the reference fact that PDF files are supported up to 20 pages, adding only a citation and the word 'only' which does not change the meaning.",
+          "error": null
+        },
+        "relevance": {
+          "score": 1.0,
+          "reasoning": "The answer directly provides the maximum number of PDF pages supported, exactly addressing the question.",
+          "error": null
+        },
+        "faithfulness": {
+          "score": 1.0,
+          "reasoning": "The answer directly restates the information from the context that the application supports PDF files up to 20 pages only, without adding any unsupported claims.",
+          "error": null
+        },
+        "retrieval": {
+          "hit_rate": 1.0,
+          "recall": 1.0,
+          "precision": 0.2,
+          "mrr": 1.0,
+          "matched_gt_count": 1,
+          "total_gt": 1,
+          "relevant_in_top_k": 1,
+          "first_relevant_rank": 1,
+          "k": 5,
+          "error": null
+        },
+        "average_score": 1.0,
+        "scores_available": 3,
+        "has_errors": false,
+        "error_details": []
+      },
+      "retrieval_detail": {
+        "retrieved_chunks": [
+          {
+            "chunk_id": 0,
+            "page": 1,
+            "section": "Page content",
+            "text": "This application supports PDF files with up to 20 pages only. For larger documents, please split them into smaller files.",
+            "semantic_score": 77.2,
+            "bm25_score": 0.575,
+            "hybrid_score": 100.0,
+            "reranker_score": 0.65
+          }
+        ],
+        "total_retrieved": 1
+      },
+      "error": null,
+      "status": "PASS"
+    }
+  ]
+}

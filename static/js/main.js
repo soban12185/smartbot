@@ -23,7 +23,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const pdfDropZone   = document.getElementById('drop-zone');
     const pdfFileInput  = document.getElementById('pdf-file-input');
     const pdfSubmitBtn  = document.getElementById('pdf-submit-btn');
-    const pdfResults    = document.getElementById('pdf-results');
 
     // Services
     const servicesForm      = document.getElementById('services-form');
@@ -337,13 +336,31 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ─────────────────────────────────────────────────
-    //  PDF UPLOAD
+    //  PDF UPLOAD & CONVERSATIONAL Q&A
     // ─────────────────────────────────────────────────
     function setupPDF() {
         if (!pdfDropZone) return;
 
+        const pdfUploadState = document.getElementById('pdf-upload-state');
+        const pdfChatState = document.getElementById('pdf-chat-state');
+        const pdfChatForm = document.getElementById('pdf-chat-form');
+        const pdfChatInput = document.getElementById('pdf-chat-input');
+        const pdfSendBtn = document.getElementById('pdf-send-btn');
+        const pdfChatArea = document.getElementById('pdf-chat-area');
+        const pdfMessagesContainer = document.getElementById('pdf-messages-container');
+        const pdfWelcome = document.getElementById('pdf-welcome');
+        const pdfDocName = document.getElementById('pdf-doc-name');
+        const pdfDocPages = document.getElementById('pdf-doc-pages');
+        const pdfRemoveBtn = document.getElementById('pdf-remove-btn');
+        const pdfSuggestions = document.getElementById('pdf-suggestions');
+
+        let currentDocId = null;
+        let isPdfProcessing = false;
+
+        // Click to open file picker
         pdfDropZone.addEventListener('click', () => pdfFileInput.click());
 
+        // File selected
         pdfFileInput.addEventListener('change', () => {
             if (pdfFileInput.files[0]) {
                 pdfDropZone.querySelector('.drop-title').textContent = pdfFileInput.files[0].name;
@@ -351,6 +368,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
+        // Drag & drop
         pdfDropZone.addEventListener('dragover', e => { e.preventDefault(); pdfDropZone.classList.add('dragover'); });
         pdfDropZone.addEventListener('dragleave', () => pdfDropZone.classList.remove('dragover'));
         pdfDropZone.addEventListener('drop', e => {
@@ -366,101 +384,221 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        let currentDocId = null;
-
+        // Upload form submit
         pdfForm.addEventListener('submit', async e => {
             e.preventDefault();
             if (!pdfFileInput.files[0]) return;
 
-            pdfResults.style.display = 'none';
-            pdfResults.innerHTML = `<div class="loader-text">Analyzing document...</div>`;
             pdfSubmitBtn.disabled = true;
+            pdfSubmitBtn.textContent = 'Uploading...';
 
             const formData = new FormData();
             formData.append('file', pdfFileInput.files[0]);
 
             try {
-                const res  = await fetch('/api/pdf/summary', { method: 'POST', body: formData });
+                const res = await fetch('/api/pdf/summary', { method: 'POST', body: formData });
                 const data = await res.json();
                 if (!res.ok || data.error) {
-                    pdfResults.innerHTML = `<div class="loader-text">${data.error || 'Failed to analyze PDF.'}</div>`;
-                    pdfResults.style.display = 'block';
                     pdfSubmitBtn.disabled = false;
+                    pdfSubmitBtn.textContent = 'Analyze Document';
+                    pdfDropZone.querySelector('.drop-title').textContent = data.error || 'Failed to analyze PDF.';
                     return;
                 }
 
                 currentDocId = data.doc_id;
                 const s = data.summary;
 
-                pdfResults.innerHTML = `
-                    <div class="pdf-summary">
-                        <h3>${data.filename} <span class="search-mode-tag">${data.search_mode === 'semantic' ? 'AI Semantic Search' : 'Keyword Search'}</span></h3>
-                        <div class="stats-grid">
-                            <div class="stat-card"><div class="stat-value">${s.total_pages}</div><div class="stat-label">Pages</div></div>
-                            <div class="stat-card"><div class="stat-value">${s.total_words.toLocaleString()}</div><div class="stat-label">Words</div></div>
-                            <div class="stat-card"><div class="stat-value">${s.total_paragraphs}</div><div class="stat-label">Paragraphs</div></div>
-                            <div class="stat-card"><div class="stat-value">${s.total_characters.toLocaleString()}</div><div class="stat-label">Characters</div></div>
-                        </div>
-                        <div class="section-title">Overview</div>
-                        <div class="overview-text">${s.overview}</div>
-                    </div>
-                    <div class="pdf-qa">
-                        <div class="pdf-qa-bar">
-                            <input type="text" id="pdf-question" class="pdf-question-input" placeholder="Ask a question about this document..." />
-                            <button id="pdf-ask-btn" class="btn-primary" style="width:auto;padding:10px 20px;">Ask</button>
-                        </div>
-                        <div id="pdf-answer" class="pdf-answer" style="display:none;"></div>
-                    </div>
-                `;
-                pdfResults.style.display = 'block';
+                // Update document header
+                pdfDocName.textContent = data.filename;
+                pdfDocPages.textContent = `${s.total_pages} page${s.total_pages !== 1 ? 's' : ''} · Ready`;
 
-                const askBtn = document.getElementById('pdf-ask-btn');
-                const questionInput = document.getElementById('pdf-question');
-                const answerDiv = document.getElementById('pdf-answer');
-
-                const doAsk = async () => {
-                    const q = questionInput.value.trim();
-                    if (!q || !currentDocId) return;
-                    askBtn.disabled = true;
-                    answerDiv.style.display = 'block';
-                    answerDiv.innerHTML = `<em>Searching...</em>`;
-                    try {
-                        const r = await fetch('/api/pdf/ask', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ question: q, doc_id: currentDocId })
-                        });
-                        const d = await r.json();
-                        if (d.error) {
-                            answerDiv.innerHTML = d.error;
-                        } else {
-                            const methodLabel = d.method === 'semantic' ? 'AI Semantic' : 'Keyword';
-                            const conf = d.confidence ? ` <span class="source-tag">Page ${d.best_page} · ${d.confidence}% match · ${methodLabel}</span>` : '';
-                            answerDiv.innerHTML = d.answer.replace(/\n\n/g, '<br><br>') + conf +
-                                `<div style="margin-top:12px;"><button id="pdf-again-btn" class="btn-link">Ask another question</button></div>`;
-                            document.getElementById('pdf-again-btn').addEventListener('click', () => {
-                                answerDiv.style.display = 'none';
-                                answerDiv.innerHTML = '';
-                                questionInput.value = '';
-                                questionInput.focus();
-                            });
-                        }
-                    } catch {
-                        answerDiv.innerHTML = 'Failed to search document.';
-                    }
-                    askBtn.disabled = false;
-                    questionInput.value = '';
-                };
-
-                askBtn.addEventListener('click', doAsk);
-                questionInput.addEventListener('keydown', e => { if (e.key === 'Enter') doAsk(); });
+                // Switch to chat view
+                pdfUploadState.style.display = 'none';
+                pdfChatState.style.display = 'flex';
 
             } catch {
-                pdfResults.innerHTML = `<div class="loader-text">Failed to analyze PDF. Please try again.</div>`;
-                pdfResults.style.display = 'block';
                 pdfSubmitBtn.disabled = false;
+                pdfSubmitBtn.textContent = 'Analyze Document';
+                pdfDropZone.querySelector('.drop-title').textContent = 'Failed to analyze PDF. Please try again.';
             }
         });
+
+        // Remove document
+        pdfRemoveBtn?.addEventListener('click', () => {
+            currentDocId = null;
+            pdfChatState.style.display = 'none';
+            pdfUploadState.style.display = '';
+            pdfMessagesContainer.innerHTML = '';
+            pdfWelcome.style.display = '';
+            pdfFileInput.value = '';
+            pdfSubmitBtn.disabled = true;
+            pdfSubmitBtn.textContent = 'Analyze Document';
+            pdfDropZone.querySelector('.drop-title').textContent = 'Drop your PDF here or click to upload';
+        });
+
+        // Suggestion chips
+        pdfSuggestions?.addEventListener('click', e => {
+            const chip = e.target.closest('.pdf-suggestion-chip');
+            if (!chip) return;
+            const question = chip.dataset.question;
+            if (question && pdfChatInput) {
+                pdfChatInput.value = question;
+                pdfChatInput.dispatchEvent(new Event('input'));
+                pdfChatForm.requestSubmit();
+            }
+        });
+
+        // Auto-grow textarea
+        pdfChatInput?.addEventListener('input', () => {
+            pdfChatInput.style.height = 'auto';
+            pdfChatInput.style.height = Math.min(pdfChatInput.scrollHeight, 120) + 'px';
+            pdfSendBtn.disabled = pdfChatInput.value.trim() === '';
+        });
+
+        // Enter to send, Shift+Enter for newline
+        pdfChatInput?.addEventListener('keydown', e => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                if (!pdfSendBtn.disabled) pdfChatForm.requestSubmit();
+            }
+        });
+
+        // Chat form submit
+        pdfChatForm?.addEventListener('submit', async e => {
+            e.preventDefault();
+            const question = pdfChatInput.value.trim();
+            if (!question || !currentDocId || isPdfProcessing) return;
+
+            // Hide welcome, show messages
+            pdfWelcome.style.display = 'none';
+            pdfChatArea.style.paddingBottom = '120px';
+
+            // Render user message
+            appendPdfUserMessage(question);
+
+            // Clear input
+            pdfChatInput.value = '';
+            pdfChatInput.style.height = 'auto';
+            pdfSendBtn.disabled = true;
+
+            // Show loading
+            const loadingEl = appendPdfLoading();
+            isPdfProcessing = true;
+
+            try {
+                const r = await fetch('/api/pdf/ask', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ question: question, doc_id: currentDocId })
+                });
+                const d = await r.json();
+                loadingEl.remove();
+
+                if (d.error) {
+                    appendPdfError(d.error, question);
+                } else {
+                    appendPdfBotMessage(d.answer, d);
+                }
+            } catch {
+                loadingEl.remove();
+                appendPdfError('Failed to search document. Please try again.', question);
+            } finally {
+                isPdfProcessing = false;
+            }
+        });
+    }
+
+    function appendPdfUserMessage(text) {
+        const container = document.getElementById('pdf-messages-container');
+        const row = document.createElement('div');
+        row.className = 'pdf-msg-row user';
+        row.innerHTML = `<div class="pdf-msg-bubble">${escapeHtml(text)}</div>`;
+        container.appendChild(row);
+        scrollPdfToBottom();
+    }
+
+    function appendPdfBotMessage(answer, metadata) {
+        const container = document.getElementById('pdf-messages-container');
+        const row = document.createElement('div');
+        row.className = 'pdf-msg-row bot';
+
+        let sourceHtml = '';
+        if (metadata.confidence && metadata.best_page) {
+            const methodLabel = metadata.method === 'semantic' ? 'AI Semantic' : 'Keyword';
+            sourceHtml = `
+                <div class="pdf-msg-source">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/></svg>
+                    <span>Page ${metadata.best_page} · ${metadata.confidence}% match · ${methodLabel}</span>
+                </div>`;
+        }
+
+        row.innerHTML = `
+            <div class="pdf-msg-avatar" aria-hidden="true">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            </div>
+            <div class="pdf-msg-body">
+                <div class="pdf-msg-text">${escapeHtml(answer).replace(/\n\n/g, '<br><br>')}</div>
+                ${sourceHtml}
+            </div>
+        `;
+        container.appendChild(row);
+        scrollPdfToBottom();
+    }
+
+    function appendPdfLoading() {
+        const container = document.getElementById('pdf-messages-container');
+        const row = document.createElement('div');
+        row.className = 'pdf-msg-loading';
+        row.innerHTML = `
+            <div class="pdf-msg-avatar" aria-hidden="true">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            </div>
+            <div class="pdf-loading-content">
+                <div class="pdf-loading-dots">
+                    <div class="pdf-loading-dot"></div>
+                    <div class="pdf-loading-dot"></div>
+                    <div class="pdf-loading-dot"></div>
+                </div>
+                <div class="pdf-loading-text">Searching the document...</div>
+            </div>
+        `;
+        container.appendChild(row);
+        scrollPdfToBottom();
+        return row;
+    }
+
+    function appendPdfError(message, retryQuestion) {
+        const container = document.getElementById('pdf-messages-container');
+        const row = document.createElement('div');
+        row.className = 'pdf-msg-error';
+        row.innerHTML = `
+            <div class="pdf-msg-avatar" aria-hidden="true">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+            </div>
+            <div class="pdf-error-content">
+                <div class="pdf-error-text">${escapeHtml(message)}</div>
+                <button class="pdf-retry-btn">Try Again</button>
+            </div>
+        `;
+        container.appendChild(row);
+        scrollPdfToBottom();
+
+        row.querySelector('.pdf-retry-btn')?.addEventListener('click', () => {
+            row.remove();
+            if (retryQuestion) {
+                const pdfChatInput = document.getElementById('pdf-chat-input');
+                if (pdfChatInput) {
+                    pdfChatInput.value = retryQuestion;
+                    pdfChatInput.dispatchEvent(new Event('input'));
+                    document.getElementById('pdf-chat-form')?.requestSubmit();
+                }
+            }
+        });
+    }
+
+    function scrollPdfToBottom() {
+        const area = document.getElementById('pdf-chat-area');
+        if (area) area.scrollTo({ top: area.scrollHeight, behavior: 'smooth' });
     }
 
     // ─────────────────────────────────────────────────

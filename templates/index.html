@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <script defer src="https://va.vercel-scripts.com/insights/script.js"></script>
+    <script defer src="https://va.vercel-scripts.com/v1/script.js"></script>
 </head>
 <body>
 
@@ -172,7 +172,8 @@
 
         <!-- ── PDF VIEW ── -->
         <section id="view-pdf" class="view" aria-label="PDF Tools">
-            <div class="centered-view">
+            <!-- Upload State -->
+            <div id="pdf-upload-state" class="centered-view">
                 <div class="view-icon" aria-hidden="true">
                     <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/></svg>
                 </div>
@@ -186,15 +187,51 @@
                     </div>
                     <button type="submit" class="btn-primary" id="pdf-submit-btn" disabled>Analyze Document</button>
                 </form>
-                <div id="pdf-results" class="pdf-analyzer-output" style="display:none;" role="region" aria-live="polite" aria-label="PDF analysis results">
-                    <div id="pdf-summary" class="pdf-summary"></div>
-                    <div id="pdf-qa" class="pdf-qa">
-                        <div class="pdf-qa-bar">
-                            <input type="text" id="pdf-question" class="pdf-question-input" placeholder="Ask a question about this document..." aria-label="Ask about the PDF">
-                            <button id="pdf-ask-btn" class="btn-primary" disabled style="width:auto;padding:10px 20px;">Ask</button>
+            </div>
+
+            <!-- Chat State (hidden until document loaded) -->
+            <div id="pdf-chat-state" class="pdf-chat-layout" style="display:none;">
+                <!-- Document Header -->
+                <div class="pdf-doc-header" id="pdf-doc-header">
+                    <div class="pdf-doc-info">
+                        <span class="pdf-doc-icon">📄</span>
+                        <div class="pdf-doc-meta">
+                            <span class="pdf-doc-name" id="pdf-doc-name">document.pdf</span>
+                            <span class="pdf-doc-pages" id="pdf-doc-pages">0 pages · Ready</span>
                         </div>
-                        <div id="pdf-answer" class="pdf-answer" style="display:none;" aria-live="polite"></div>
                     </div>
+                    <button class="pdf-remove-btn" id="pdf-remove-btn" title="Remove document" aria-label="Remove document">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                    </button>
+                </div>
+
+                <!-- Chat Messages -->
+                <div class="pdf-chat-area" id="pdf-chat-area">
+                    <!-- Empty state / welcome -->
+                    <div class="pdf-welcome" id="pdf-welcome">
+                        <div class="pdf-welcome-icon">📄</div>
+                        <h3>Ready to answer questions</h3>
+                        <p>Ask anything about this document.</p>
+                        <div class="pdf-suggestions" id="pdf-suggestions">
+                            <button class="pdf-suggestion-chip" data-question="Summarize this document">Summarize this document</button>
+                            <button class="pdf-suggestion-chip" data-question="What are the main skills?">What are the main skills?</button>
+                            <button class="pdf-suggestion-chip" data-question="Explain the projects">Explain the projects</button>
+                            <button class="pdf-suggestion-chip" data-question="What Generative AI experience is mentioned?">Generative AI experience?</button>
+                        </div>
+                    </div>
+
+                    <!-- Messages injected here -->
+                    <div id="pdf-messages-container" class="pdf-messages-container"></div>
+                </div>
+
+                <!-- Composer -->
+                <div class="pdf-composer-wrapper">
+                    <form id="pdf-chat-form" class="pdf-composer" role="search" aria-label="Ask about the PDF">
+                        <textarea id="pdf-chat-input" class="pdf-composer-input" placeholder="Ask anything about this document..." rows="1" autocomplete="off" aria-label="Type your question"></textarea>
+                        <button type="submit" class="pdf-send-btn" id="pdf-send-btn" disabled aria-label="Send question">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 19V5"/><path d="M5 12l7-7 7 7"/></svg>
+                        </button>
+                    </form>
                 </div>
             </div>
         </section>

@@ -1,0 +1,672 @@
+{
+  "summary": {
+    "total_examples": 10,
+    "passed": 9,
+    "failed": 1,
+    "errors": 0,
+    "elapsed_seconds": 135.22,
+    "llm_metrics": {
+      "answer_correctness": 0.933,
+      "answer_relevance": 1.0,
+      "faithfulness": 1.0,
+      "overall": 0.978
+    },
+    "retrieval_metrics": {
+      "recall_at_k": 1.0,
+      "hit_rate_at_k": 1.0,
+      "precision_at_k": 0.222,
+      "mrr": 1.0,
+      "k": 5,
+      "examples_with_real_retrieval": 10,
+      "total_examples": 10,
+      "status": "EVALUATED"
+    },
+    "passed_indices": [
+      1,
+      2,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10
+    ],
+    "failed_indices": [
+      3
+    ],
+    "error_indices": []
+  },
+  "details": [
+    {
+      "index": 1,
+      "question": "What is the capital of France?",
+      "reference_answer": "The capital of France is Paris.",
+      "generated_answer": "Paris\u3010Source\u202f1,\u202fPage\u202f1\u3011",
+      "ground_truth_chunks": [
+        "France is a country in Western Europe. Its capital city is Paris, which is also the largest city in the country."
+      ],
+      "metadata": {
+        "difficulty": "easy",
+        "type": "factual",
+        "document_name": "geography.pdf"
+      },
+      "evaluation": {
+        "correctness": {
+          "score": 1.0,
+          "reasoning": "The generated answer correctly states that the capital of France is Paris, matching the reference answer.",
+          "error": null
+        },
+        "relevance": {
+          "score": 1.0,
+          "reasoning": "The answer directly provides the capital of France ('Paris'), fully addressing the question.",
+          "error": null
+        },
+        "faithfulness": {
+          "score": 1.0,
+          "reasoning": "The answer 'Paris' directly matches the context stating that Paris is the capital city of France, with no contradictory or unsupported information.",
+          "error": null
+        },
+        "retrieval": {
+          "hit_rate": 1.0,
+          "recall": 1.0,
+          "precision": 0.2,
+          "mrr": 1.0,
+          "matched_gt_count": 1,
+          "total_gt": 1,
+          "relevant_in_top_k": 1,
+          "first_relevant_rank": 1,
+          "k": 5,
+          "error": null
+        },
+        "average_score": 1.0,
+        "scores_available": 3,
+        "has_errors": false,
+        "error_details": []
+      },
+      "retrieval_detail": {
+        "retrieved_chunks": [
+          {
+            "chunk_id": 0,
+            "page": 1,
+            "section": "Page content",
+            "text": "France is a country in Western Europe. Its capital city is Paris, which is also the largest city in the country.",
+            "semantic_score": 70.0,
+            "bm25_score": 1.466,
+            "hybrid_score": 100.0,
+            "reranker_score": 0.847
+          }
+        ],
+        "total_retrieved": 1
+      },
+      "error": null,
+      "status": "PASS"
+    },
+    {
+      "index": 2,
+      "question": "What is the recommended chunk size for text splitting?",
+      "reference_answer": "The recommended chunk size is 800 characters with an overlap of 150 characters.",
+      "generated_answer": "The recommended chunk size is **800 characters**\u3010Source\u202f1,\u202fPage\u202f1\u3011.",
+      "ground_truth_chunks": [
+        "For optimal retrieval performance, we recommend splitting text into chunks of 800 characters with an overlap of 150 characters between consecutive chunks."
+      ],
+      "metadata": {
+        "difficulty": "easy",
+        "type": "factual",
+        "document_name": "technical_guide.pdf"
+      },
+      "evaluation": {
+        "correctness": {
+          "score": 0.6,
+          "reasoning": "The generated answer correctly states the chunk size of 800 characters, matching the reference, but omits the required overlap of 150 characters, making it only partially correct.",
+          "error": null
+        },
+        "relevance": {
+          "score": 1.0,
+          "reasoning": "The answer directly provides the recommended chunk size, which is exactly what the question asks.",
+          "error": null
+        },
+        "faithfulness": {
+          "score": 1.0,
+          "reasoning": "The answer correctly states the recommended chunk size of 800 characters, which directly matches the information provided in the context.",
+          "error": null
+        },
+        "retrieval": {
+          "hit_rate": 1.0,
+          "recall": 1.0,
+          "precision": 0.2,
+          "mrr": 1.0,
+          "matched_gt_count": 1,
+          "total_gt": 1,
+          "relevant_in_top_k": 1,
+          "first_relevant_rank": 1,
+          "k": 5,
+          "error": null
+        },
+        "average_score": 0.867,
+        "scores_available": 3,
+        "has_errors": false,
+        "error_details": []
+      },
+      "retrieval_detail": {
+        "retrieved_chunks": [
+          {
+            "chunk_id": 0,
+            "page": 1,
+            "section": "Page content",
+            "text": "For optimal retrieval performance, we recommend splitting text into chunks of 800 characters with an overlap of 150 characters between consecutive chunks.",
+            "semantic_score": 78.8,
+            "bm25_score": 0.863,
+            "hybrid_score": 100.0,
+            "reranker_score": 0.867
+          }
+        ],
+        "total_retrieved": 1
+      },
+      "error": null,
+      "status": "PASS"
+    },
+    {
+      "index": 3,
+      "question": "What embedding model does SmartBot use?",
+      "reference_answer": "SmartBot uses the Jina embeddings v3 model (jina-embeddings-v3) for text embeddings.",
+      "generated_answer": "The information was not found in the document.",
+      "ground_truth_chunks": [
+        "SmartBot employs the jina-embeddings-v3 model from Jina AI for generating text embeddings used in the hybrid RAG retrieval pipeline."
+      ],
+      "metadata": {
+        "difficulty": "easy",
+        "type": "factual",
+        "document_name": "architecture_guide.pdf"
+      },
+      "evaluation": {
+        "correctness": {
+          "score": 0.0,
+          "reasoning": "The generated answer fails to provide the correct information; it incorrectly states the information was not found, whereas the reference clearly states the model used.",
+          "error": null
+        },
+        "relevance": {
+          "score": 0.0,
+          "reasoning": "The answer does not provide any information about the embedding model used by SmartBot; it merely states that the information was not found, which does not address the question.",
+          "error": null
+        },
+        "faithfulness": {
+          "score": 0.0,
+          "reasoning": "The generated answer incorrectly states that the information was not found, whereas the context explicitly mentions that SmartBot uses the jina-embeddings-v3 model for text embeddings. This contradicts the provided context.",
+          "error": null
+        },
+        "retrieval": {
+          "hit_rate": 0.0,
+          "recall": 0.0,
+          "precision": 0.0,
+          "mrr": 0.0,
+          "matched_gt_count": 0,
+          "total_gt": 1,
+          "relevant_in_top_k": 0,
+          "first_relevant_rank": null,
+          "k": 5,
+          "error": null
+        },
+        "average_score": 0.0,
+        "scores_available": 3,
+        "has_errors": false,
+        "error_details": []
+      },
+      "retrieval_detail": {
+        "retrieved_chunks": [],
+        "total_retrieved": 0
+      },
+      "error": null,
+      "status": "FAIL"
+    },
+    {
+      "index": 4,
+      "question": "What is LangSmith?",
+      "reference_answer": "LangSmith is a platform for debugging, testing, evaluating, and monitoring LLM applications.",
+      "generated_answer": "LangSmith is an observability and evaluation platform for LLM applications\u3010Source\u202f1, Page\u202f1\u3011.",
+      "ground_truth_chunks": [
+        "LangSmith is an observability and evaluation platform for LLM applications.",
+        "It enables developers to trace runs, evaluate responses, monitor production usage, and iteratively improve their applications."
+      ],
+      "metadata": {
+        "difficulty": "easy",
+        "type": "definition",
+        "document_name": "langsmith_overview.pdf"
+      },
+      "evaluation": {
+        "correctness": {
+          "score": 0.8,
+          "reasoning": "The generated answer correctly identifies LangSmith as a platform for observability (covering monitoring/debugging) and evaluation of LLM applications, matching most of the reference. It omits the explicit mention of testing, so it's mostly correct with a minor difference.",
+          "error": null
+        },
+        "relevance": {
+          "score": 1.0,
+          "reasoning": "The answer directly defines LangSmith as an observability and evaluation platform for LLM applications, which fully addresses the question.",
+          "error": null
+        },
+        "faithfulness": {
+          "score": 1.0,
+          "reasoning": "The answer directly repeats the statement from the context that LangSmith is an observability and evaluation platform for LLM applications, with no additional or contradictory information.",
+          "error": null
+        },
+        "retrieval": {
+          "hit_rate": 1.0,
+          "recall": 1.0,
+          "precision": 0.4,
+          "mrr": 1.0,
+          "matched_gt_count": 2,
+          "total_gt": 2,
+          "relevant_in_top_k": 2,
+          "first_relevant_rank": 1,
+          "k": 5,
+          "error": null
+        },
+        "average_score": 0.933,
+        "scores_available": 3,
+        "has_errors": false,
+        "error_details": []
+      },
+      "retrieval_detail": {
+        "retrieved_chunks": [
+          {
+            "chunk_id": 0,
+            "page": 1,
+            "section": "Page content",
+            "text": "LangSmith is an observability and evaluation platform for LLM applications. It enables developers to trace runs, evaluate responses, monitor production usage, and iteratively improve their applications.",
+            "semantic_score": 84.6,
+            "bm25_score": 0.575,
+            "hybrid_score": 100.0,
+            "reranker_score": 0.846
+          }
+        ],
+        "total_retrieved": 1
+      },
+      "error": null,
+      "status": "PASS"
+    },
+    {
+      "index": 5,
+      "question": "What is the maximum number of PDF pages supported?",
+      "reference_answer": "SmartBot supports PDF files with up to 20 pages.",
+      "generated_answer": "The application supports PDF files with a maximum of **20 pages**\u3010Source\u202f1, Page\u202f1\u3011.",
+      "ground_truth_chunks": [
+        "This application supports PDF files with up to 20 pages only."
+      ],
+      "metadata": {
+        "difficulty": "easy",
+        "type": "numerical",
+        "document_name": "smartbot_docs.pdf"
+      },
+      "evaluation": {
+        "correctness": {
+          "score": 1.0,
+          "reasoning": "The generated answer accurately restates the reference information that PDF files are supported up to 20 pages, matching the content precisely.",
+          "error": null
+        },
+        "relevance": {
+          "score": 1.0,
+          "reasoning": "The answer directly provides the maximum number of PDF pages supported, exactly addressing the question.",
+          "error": null
+        },
+        "faithfulness": {
+          "score": 1.0,
+          "reasoning": "The answer directly restates the information from the context that the application supports PDF files up to 20 pages, with no additional or contradictory claims.",
+          "error": null
+        },
+        "retrieval": {
+          "hit_rate": 1.0,
+          "recall": 1.0,
+          "precision": 0.2,
+          "mrr": 1.0,
+          "matched_gt_count": 1,
+          "total_gt": 1,
+          "relevant_in_top_k": 1,
+          "first_relevant_rank": 1,
+          "k": 5,
+          "error": null
+        },
+        "average_score": 1.0,
+        "scores_available": 3,
+        "has_errors": false,
+        "error_details": []
+      },
+      "retrieval_detail": {
+        "retrieved_chunks": [
+          {
+            "chunk_id": 0,
+            "page": 1,
+            "section": "Page content",
+            "text": "This application supports PDF files with up to 20 pages only. For larger documents, please split them into smaller files.",
+            "semantic_score": 77.2,
+            "bm25_score": 0.575,
+            "hybrid_score": 100.0,
+            "reranker_score": 0.65
+          }
+        ],
+        "total_retrieved": 1
+      },
+      "error": null,
+      "status": "PASS"
+    },
+    {
+      "index": 6,
+      "question": "What is the primary LLM used by SmartBot?",
+      "reference_answer": "SmartBot uses Groq as the primary LLM provider with the openai/gpt-oss-120b model.",
+      "generated_answer": "SmartBot\u2019s primary LLM is the **openai/gpt\u2011oss\u2011120b** model provided by **Groq**\u3010Source\u202f1,\u202fPage\u202f1\u3011.",
+      "ground_truth_chunks": [
+        "SmartBot uses Groq as its primary LLM provider, running the openai/gpt-oss-120b model."
+      ],
+      "metadata": {
+        "difficulty": "easy",
+        "type": "factual",
+        "document_name": "architecture_guide.pdf"
+      },
+      "evaluation": {
+        "correctness": {
+          "score": 1.0,
+          "reasoning": "The generated answer exactly matches the reference, stating the same model (openai/gpt-oss-120b) and provider (Groq) as the primary LLM.",
+          "error": null
+        },
+        "relevance": {
+          "score": 1.0,
+          "reasoning": "The answer directly states the primary LLM used by SmartBot, exactly addressing the question.",
+          "error": null
+        },
+        "faithfulness": {
+          "score": 1.0,
+          "reasoning": "The answer directly restates the context that SmartBot's primary LLM is the openai/gpt-oss-120b model provided by Groq, which is fully supported.",
+          "error": null
+        },
+        "retrieval": {
+          "hit_rate": 1.0,
+          "recall": 1.0,
+          "precision": 0.2,
+          "mrr": 1.0,
+          "matched_gt_count": 1,
+          "total_gt": 1,
+          "relevant_in_top_k": 1,
+          "first_relevant_rank": 1,
+          "k": 5,
+          "error": null
+        },
+        "average_score": 1.0,
+        "scores_available": 3,
+        "has_errors": false,
+        "error_details": []
+      },
+      "retrieval_detail": {
+        "retrieved_chunks": [
+          {
+            "chunk_id": 0,
+            "page": 1,
+            "section": "Page content",
+            "text": "SmartBot uses Groq as its primary LLM provider, running the openai/gpt-oss-120b model. Gemini is used as a fallback when Groq is unavailable.",
+            "semantic_score": 73.5,
+            "bm25_score": 1.849,
+            "hybrid_score": 100.0,
+            "reranker_score": 0.798
+          }
+        ],
+        "total_retrieved": 1
+      },
+      "error": null,
+      "status": "PASS"
+    },
+    {
+      "index": 7,
+      "question": "What reranker does SmartBot use?",
+      "reference_answer": "SmartBot uses the Jina reranker v2 base multilingual model.",
+      "generated_answer": "SmartBot uses the **jina\u2011reranker\u2011v2\u2011base\u2011multilingual** model from Jina\u202fAI for reranking retrieved chunks\u3010Source\u202f1,\u202fPage\u202f1\u3011.",
+      "ground_truth_chunks": [
+        "SmartBot uses the jina-reranker-v2-base-multilingual model from Jina AI for reranking retrieved chunks."
+      ],
+      "metadata": {
+        "difficulty": "easy",
+        "type": "factual",
+        "document_name": "architecture_guide.pdf"
+      },
+      "evaluation": {
+        "correctness": {
+          "score": 1.0,
+          "reasoning": "The generated answer correctly identifies the same model name (jina\u2011reranker\u2011v2\u2011base\u2011multilingual) as the reference, matching the information precisely.",
+          "error": null
+        },
+        "relevance": {
+          "score": 1.0,
+          "reasoning": "The answer directly names the reranker model used by SmartBot, fully addressing the question.",
+          "error": null
+        },
+        "faithfulness": {
+          "score": 1.0,
+          "reasoning": "The answer directly restates the information from the context about SmartBot using the jina-reranker-v2-base-multilingual model from Jina AI for reranking retrieved chunks, with no contradictory or unsupported claims.",
+          "error": null
+        },
+        "retrieval": {
+          "hit_rate": 1.0,
+          "recall": 1.0,
+          "precision": 0.2,
+          "mrr": 1.0,
+          "matched_gt_count": 1,
+          "total_gt": 1,
+          "relevant_in_top_k": 1,
+          "first_relevant_rank": 1,
+          "k": 5,
+          "error": null
+        },
+        "average_score": 1.0,
+        "scores_available": 3,
+        "has_errors": false,
+        "error_details": []
+      },
+      "retrieval_detail": {
+        "retrieved_chunks": [
+          {
+            "chunk_id": 0,
+            "page": 1,
+            "section": "Page content",
+            "text": "SmartBot uses the jina-reranker-v2-base-multilingual model from Jina AI for reranking retrieved chunks. The reranker takes the top 20 candidates and selects the top 5 most relevant results.",
+            "semantic_score": 82.3,
+            "bm25_score": 0.575,
+            "hybrid_score": 100.0,
+            "reranker_score": 0.783
+          }
+        ],
+        "total_retrieved": 1
+      },
+      "error": null,
+      "status": "PASS"
+    },
+    {
+      "index": 8,
+      "question": "What database does SmartBot use for long-term memory?",
+      "reference_answer": "SmartBot uses PostgreSQL (via Neon) for long-term memory storage.",
+      "generated_answer": "SmartBot uses a **PostgreSQL database hosted on Neon** for its long\u2011term memory\u3010Source\u202f1,\u202fPage\u202f1\u3011.",
+      "ground_truth_chunks": [
+        "SmartBot stores long-term memory facts and conversation history in a PostgreSQL database hosted on Neon."
+      ],
+      "metadata": {
+        "difficulty": "easy",
+        "type": "factual",
+        "document_name": "architecture_guide.pdf"
+      },
+      "evaluation": {
+        "correctness": {
+          "score": 1.0,
+          "reasoning": "The generated answer exactly matches the reference, stating that SmartBot uses PostgreSQL via Neon for long-term memory storage.",
+          "error": null
+        },
+        "relevance": {
+          "score": 1.0,
+          "reasoning": "The answer directly states the specific database (PostgreSQL) and its hosting (Neon) used for SmartBot's long-term memory, fully addressing the question.",
+          "error": null
+        },
+        "faithfulness": {
+          "score": 1.0,
+          "reasoning": "The answer directly restates the information from the context that SmartBot stores long-term memory in a PostgreSQL database hosted on Neon, which is fully supported.",
+          "error": null
+        },
+        "retrieval": {
+          "hit_rate": 1.0,
+          "recall": 1.0,
+          "precision": 0.2,
+          "mrr": 1.0,
+          "matched_gt_count": 1,
+          "total_gt": 1,
+          "relevant_in_top_k": 1,
+          "first_relevant_rank": 1,
+          "k": 5,
+          "error": null
+        },
+        "average_score": 1.0,
+        "scores_available": 3,
+        "has_errors": false,
+        "error_details": []
+      },
+      "retrieval_detail": {
+        "retrieved_chunks": [
+          {
+            "chunk_id": 0,
+            "page": 1,
+            "section": "Page content",
+            "text": "SmartBot stores long-term memory facts and conversation history in a PostgreSQL database hosted on Neon. The memory system uses psycopg3 for connection pooling.",
+            "semantic_score": 84.5,
+            "bm25_score": 1.562,
+            "hybrid_score": 100.0,
+            "reranker_score": 0.814
+          }
+        ],
+        "total_retrieved": 1
+      },
+      "error": null,
+      "status": "PASS"
+    },
+    {
+      "index": 9,
+      "question": "What is the default chunk overlap size?",
+      "reference_answer": "The default chunk overlap size is 60 characters.",
+      "generated_answer": "The default chunk overlap size is **60 characters**\u3010Source\u202f1,\u202fPage\u202f1\u3011.",
+      "ground_truth_chunks": [
+        "SmartBot uses a chunk overlap of 60 characters to maintain context between consecutive chunks during text splitting."
+      ],
+      "metadata": {
+        "difficulty": "easy",
+        "type": "factual",
+        "document_name": "technical_guide.pdf"
+      },
+      "evaluation": {
+        "correctness": {
+          "score": 1.0,
+          "reasoning": "The generated answer exactly matches the reference statement, providing the same value and context.",
+          "error": null
+        },
+        "relevance": {
+          "score": 1.0,
+          "reasoning": "The answer directly provides the specific default chunk overlap size, exactly addressing the question.",
+          "error": null
+        },
+        "faithfulness": {
+          "score": 1.0,
+          "reasoning": "The answer directly restates the information from the context that the chunk overlap is 60 characters, with no contradictory or extra unsupported claims.",
+          "error": null
+        },
+        "retrieval": {
+          "hit_rate": 1.0,
+          "recall": 1.0,
+          "precision": 0.2,
+          "mrr": 1.0,
+          "matched_gt_count": 1,
+          "total_gt": 1,
+          "relevant_in_top_k": 1,
+          "first_relevant_rank": 1,
+          "k": 5,
+          "error": null
+        },
+        "average_score": 1.0,
+        "scores_available": 3,
+        "has_errors": false,
+        "error_details": []
+      },
+      "retrieval_detail": {
+        "retrieved_chunks": [
+          {
+            "chunk_id": 0,
+            "page": 1,
+            "section": "Page content",
+            "text": "SmartBot uses a chunk overlap of 60 characters to maintain context between consecutive chunks during text splitting.",
+            "semantic_score": 42.3,
+            "bm25_score": 0.575,
+            "hybrid_score": 100.0,
+            "reranker_score": 0.44
+          }
+        ],
+        "total_retrieved": 1
+      },
+      "error": null,
+      "status": "PASS"
+    },
+    {
+      "index": 10,
+      "question": "What file format does SmartBot support for document upload?",
+      "reference_answer": "SmartBot supports PDF files for document upload.",
+      "generated_answer": "SmartBot supports PDF files for document upload\u3010Source\u202f1,\u202fPage\u202f1\u3011.",
+      "ground_truth_chunks": [
+        "SmartBot currently supports PDF files for document upload and analysis."
+      ],
+      "metadata": {
+        "difficulty": "easy",
+        "type": "factual",
+        "document_name": "smartbot_docs.pdf"
+      },
+      "evaluation": {
+        "correctness": {
+          "score": 1.0,
+          "reasoning": "The generated answer exactly matches the reference statement, merely adding a citation, which does not affect correctness.",
+          "error": null
+        },
+        "relevance": {
+          "score": 1.0,
+          "reasoning": "The answer directly states the supported file format (PDF) for document upload, fully addressing the question.",
+          "error": null
+        },
+        "faithfulness": {
+          "score": 1.0,
+          "reasoning": "The answer directly restates the information from the context that SmartBot supports PDF files for document upload, which is fully supported.",
+          "error": null
+        },
+        "retrieval": {
+          "hit_rate": 1.0,
+          "recall": 1.0,
+          "precision": 0.2,
+          "mrr": 1.0,
+          "matched_gt_count": 1,
+          "total_gt": 1,
+          "relevant_in_top_k": 1,
+          "first_relevant_rank": 1,
+          "k": 5,
+          "error": null
+        },
+        "average_score": 1.0,
+        "scores_available": 3,
+        "has_errors": false,
+        "error_details": []
+      },
+      "retrieval_detail": {
+        "retrieved_chunks": [
+          {
+            "chunk_id": 0,
+            "page": 1,
+            "section": "Page content",
+            "text": "SmartBot currently supports PDF files for document upload and analysis. The system uses PyMuPDF (fitz) for text extraction from PDF documents.",
+            "semantic_score": 73.8,
+            "bm25_score": 1.274,
+            "hybrid_score": 100.0,
+            "reranker_score": 0.777
+          }
+        ],
+        "total_retrieved": 1
+      },
+      "error": null,
+      "status": "PASS"
+    }
+  ]
+}

@@ -1,0 +1,189 @@
+{
+  "summary": {
+    "total_examples": 5,
+    "valid_examples": 5,
+    "failed_examples": 5,
+    "elapsed_seconds": 0.32,
+    "metrics": {
+      "answer_correctness": 0.0,
+      "answer_relevance": 0.0,
+      "faithfulness": 0.0,
+      "retrieval_hit_rate": 1.0,
+      "overall": 0.0
+    },
+    "failed_indices": [
+      1,
+      2,
+      3,
+      4,
+      5
+    ]
+  },
+  "details": [
+    {
+      "index": 1,
+      "question": "What is the capital of France?",
+      "reference_answer": "The capital of France is Paris.",
+      "generated_answer": "",
+      "metadata": {
+        "document_name": "example_document.pdf",
+        "page_number": 1,
+        "difficulty": "easy",
+        "type": "factual"
+      },
+      "evaluation": {
+        "correctness": {
+          "score": 0.0,
+          "reasoning": "No generated answer provided"
+        },
+        "relevance": {
+          "score": 0.0,
+          "reasoning": "No generated answer provided"
+        },
+        "faithfulness": {
+          "score": 0.0,
+          "reasoning": "No generated answer provided"
+        },
+        "retrieval": {
+          "recall": 1.0,
+          "hit_rate": 1.0,
+          "precision": 1.0
+        },
+        "average_score": 0.0
+      },
+      "error": null
+    },
+    {
+      "index": 2,
+      "question": "What is the recommended chunk size for text splitting?",
+      "reference_answer": "The recommended chunk size is 800 characters with an overlap of 150 characters.",
+      "generated_answer": "",
+      "metadata": {
+        "document_name": "technical_guide.pdf",
+        "page_number": 5,
+        "difficulty": "medium",
+        "type": "technical"
+      },
+      "evaluation": {
+        "correctness": {
+          "score": 0.0,
+          "reasoning": "No generated answer provided"
+        },
+        "relevance": {
+          "score": 0.0,
+          "reasoning": "No generated answer provided"
+        },
+        "faithfulness": {
+          "score": 0.0,
+          "reasoning": "No generated answer provided"
+        },
+        "retrieval": {
+          "recall": 1.0,
+          "hit_rate": 1.0,
+          "precision": 1.0
+        },
+        "average_score": 0.0
+      },
+      "error": null
+    },
+    {
+      "index": 3,
+      "question": "What are the key differences between LangChain and LangGraph?",
+      "reference_answer": "LangChain is a framework for building LLM applications with chains and agents, while LangGraph is a library for building stateful, multi-actor applications with LLMs using graph-based workflows.",
+      "generated_answer": "",
+      "metadata": {
+        "document_name": "framework_comparison.pdf",
+        "page_number": 12,
+        "difficulty": "hard",
+        "type": "comparison"
+      },
+      "evaluation": {
+        "correctness": {
+          "score": 0.0,
+          "reasoning": "No generated answer provided"
+        },
+        "relevance": {
+          "score": 0.0,
+          "reasoning": "No generated answer provided"
+        },
+        "faithfulness": {
+          "score": 0.0,
+          "reasoning": "No generated answer provided"
+        },
+        "retrieval": {
+          "recall": 1.0,
+          "hit_rate": 1.0,
+          "precision": 1.0
+        },
+        "average_score": 0.0
+      },
+      "error": null
+    },
+    {
+      "index": 4,
+      "question": "How do I upload a PDF to SmartBot?",
+      "reference_answer": "You can upload a PDF by clicking the 'PDF Tools' section in the sidebar, then dragging and dropping your PDF file or clicking to browse and select it.",
+      "generated_answer": "",
+      "metadata": {
+        "document_name": "user_manual.pdf",
+        "page_number": 3,
+        "difficulty": "easy",
+        "type": "procedural"
+      },
+      "evaluation": {
+        "correctness": {
+          "score": 0.0,
+          "reasoning": "No generated answer provided"
+        },
+        "relevance": {
+          "score": 0.0,
+          "reasoning": "No generated answer provided"
+        },
+        "faithfulness": {
+          "score": 0.0,
+          "reasoning": "No generated answer provided"
+        },
+        "retrieval": {
+          "recall": 1.0,
+          "hit_rate": 1.0,
+          "precision": 1.0
+        },
+        "average_score": 0.0
+      },
+      "error": null
+    },
+    {
+      "index": 5,
+      "question": "What factors affect RAG retrieval quality?",
+      "reference_answer": "Key factors include chunk size, embedding quality, retrieval method (semantic vs keyword), reranking quality, and the relevance of the source documents.",
+      "generated_answer": "",
+      "metadata": {
+        "document_name": "rag_best_practices.pdf",
+        "page_number": 8,
+        "difficulty": "hard",
+        "type": "analytical"
+      },
+      "evaluation": {
+        "correctness": {
+          "score": 0.0,
+          "reasoning": "No generated answer provided"
+        },
+        "relevance": {
+          "score": 0.0,
+          "reasoning": "No generated answer provided"
+        },
+        "faithfulness": {
+          "score": 0.0,
+          "reasoning": "No generated answer provided"
+        },
+        "retrieval": {
+          "recall": 1.0,
+          "hit_rate": 1.0,
+          "precision": 1.0
+        },
+        "average_score": 0.0
+      },
+      "error": null
+    }
+  ]
+}
