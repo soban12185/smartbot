@@ -34,9 +34,12 @@ from typing import Any, Dict, List, Optional, Tuple
 
 import fitz
 import requests
+from dotenv import load_dotenv
 from openai import OpenAI
 
 from tracing import trace_run, trace_rag_retrieval, trace_rag_generation, trace_llm_call
+
+load_dotenv(override=True)
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
