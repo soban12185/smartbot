@@ -18,12 +18,14 @@ Environment:
     LANGSMITH_PROJECT=smartbot
 """
 
+import datetime
 import functools
 import logging
 import os
 import time
 from contextlib import contextmanager
 from typing import Any, Callable, Dict, Generator, Optional
+from uuid import uuid4
 
 logger = logging.getLogger(__name__)
 
@@ -88,6 +90,88 @@ def is_tracing_enabled() -> bool:
 
 
 # ---------------------------------------------------------------------------
+# Run trace wrapper
+# ---------------------------------------------------------------------------
+
+class _TraceRun:
+    """
+    Lightweight handle for a LangSmith run created via the manual
+    create_run / update_run API.
+
+    The langsmith Client.create_run() is write-only and returns None, so the
+    run id must be generated locally and passed to create_run(id=...). This
+    wrapper owns the run lifecycle: callers finalize with .end(outputs=...) or
+    .add_outputs(...), and the run is committed to LangSmith exactly once via
+    client.update_run().
+    """
+
+    def __init__(self, client: Any, run_id, name: str):
+        self._client = client
+        self._run_id = run_id
+        self._name = name
+        self.outputs: Dict[str, Any] = {}
+        self.error: Optional[str] = None
+        self.end_time: Optional[datetime.datetime] = None
+        self._finalized = False
+
+    @property
+    def id(self):
+        return self._run_id
+
+    def end(self, outputs: Optional[Dict[str, Any]] = None):
+        """Finalize the run with the given outputs (replaces accumulated ones)."""
+        if outputs is not None:
+            self.outputs = outputs
+        self._finalize()
+
+    def add_outputs(self, outputs: Optional[Dict[str, Any]] = None):
+        """Accumulate outputs without finalizing the run yet."""
+        if outputs:
+            if not isinstance(outputs, dict):
+                self.outputs["output"] = outputs
+            else:
+                self.outputs.update(outputs)
+
+    def _finalize(self, error: Optional[Exception] = None):
+        if self._finalized:
+            return
+        self._finalized = True
+        self.end_time = datetime.datetime.now(datetime.timezone.utc)
+
+        if error is not None:
+            self.error = str(error)
+
+        updates: Dict[str, Any] = {"end_time": self.end_time}
+        if self.outputs:
+            updates["outputs"] = self.outputs
+        if self.error:
+            updates["error"] = self.error
+
+        try:
+            self._client.update_run(run_id=self._run_id, **updates)
+            if self.error:
+                logger.debug(
+                    "LangSmith trace ERROR: %s [%s]",
+                    self._name, str(self._run_id)[:8],
+                )
+            else:
+                logger.debug(
+                    "LangSmith trace END: %s [%s]",
+                    self._name, str(self._run_id)[:8],
+                )
+        except Exception as exc:
+            logger.debug("LangSmith update_run failed (non-blocking): %s", exc)
+
+    def __del__(self):
+        # Safety net: finalize if the caller never called .end()/.add_outputs().
+        if not self._finalized:
+            try:
+                self._finalize()
+            except Exception:
+                pass
+
+
+# ---------------------------------------------------------------------------
 # Run trace context manager
 # ---------------------------------------------------------------------------
 
@@ -105,11 +189,17 @@ def trace_run(
     Usage:
         with trace_run("my_operation", inputs={"query": q}) as run:
             result = do_something(q)
+        if run:
+            run.end(outputs={"result": result})
+
+    or:
+        with trace_run("my_operation", inputs={"query": q}) as run:
+            result = do_something(q)
             if run:
                 run.end(outputs={"result": result})
 
     If LangSmith is unavailable, yields None and the code still runs.
-    Exceptions from the wrapped code are always re-raised correctly.
+    Exceptions from the wrapped code are recorded on the run and re-raised.
     """
     client = _get_client()
     if not client:
@@ -117,10 +207,11 @@ def trace_run(
         return
 
     project = os.environ.get("LANGSMITH_PROJECT", "smartbot")
-    run = None
+    run_id = uuid4()
 
     try:
-        run = client.create_run(
+        client.create_run(
+            id=run_id,
             name=name,
             run_type=run_type,
             inputs=inputs or {},
@@ -128,33 +219,20 @@ def trace_run(
             tags=tags or [],
             project_name=project,
         )
+        logger.debug("LangSmith trace START: %s [%s]", name, str(run_id)[:8])
     except Exception as exc:
         logger.debug("LangSmith create_run failed (non-blocking): %s", exc)
-        run = None
+        yield None
+        return
+
+    handle = _TraceRun(client, run_id, name)
 
     try:
-        yield run
+        yield handle
     except Exception as exc:
-        # Record the error in LangSmith if possible, then re-raise
-        if run:
-            try:
-                client.update_run(
-                    run_id=run.id,
-                    error=str(exc),
-                )
-            except Exception:
-                pass
+        logger.debug("LangSmith trace ERROR: %s [%s]", name, str(run_id)[:8])
+        handle._finalize(error=exc)
         raise
-    finally:
-        if run:
-            try:
-                if not run.end_time:
-                    client.update_run(
-                        run_id=run.id,
-                        outputs=run.outputs or {},
-                    )
-            except Exception:
-                pass
 
 
 # ---------------------------------------------------------------------------
@@ -190,10 +268,11 @@ def traced(
 
             # Build inputs dict
             run_inputs = {"args": str(args)[:500], "kwargs": str(kwargs)[:500]}
-            run = None
+            run_id = uuid4()
 
             try:
-                run = client.create_run(
+                client.create_run(
+                    id=run_id,
                     name=run_name,
                     run_type=run_type,
                     inputs=run_inputs,
@@ -201,8 +280,10 @@ def traced(
                     tags=tags or [],
                     project_name=project,
                 )
-            except Exception:
-                pass
+                logger.debug("LangSmith trace START: %s [%s]", run_name, str(run_id)[:8])
+            except Exception as exc:
+                logger.debug("LangSmith create_run failed (non-blocking): %s", exc)
+                return func(*args, **kwargs)
 
             start_time = time.time()
             error = None
@@ -216,28 +297,38 @@ def traced(
                 raise
             finally:
                 elapsed = time.time() - start_time
-                if run:
-                    try:
-                        outputs = {}
-                        if result is not None:
-                            # Safely serialize result
-                            try:
-                                import json
-                                json.dumps(result)
-                                outputs["result"] = result
-                            except (TypeError, ValueError):
-                                outputs["result"] = str(result)[:1000]
+                try:
+                    outputs = {}
+                    if result is not None:
+                        # Safely serialize result
+                        try:
+                            import json
+                            json.dumps(result)
+                            outputs["result"] = result
+                        except (TypeError, ValueError):
+                            outputs["result"] = str(result)[:1000]
 
-                        updates = {
-                            "outputs": outputs,
-                            "extra": {"elapsed_seconds": elapsed},
-                        }
-                        if error:
-                            updates["error"] = str(error)
+                    updates = {
+                        "outputs": outputs,
+                        "extra": {"elapsed_seconds": elapsed},
+                        "end_time": datetime.datetime.now(datetime.timezone.utc),
+                    }
+                    if error:
+                        updates["error"] = str(error)
 
-                        client.update_run(run_id=run.id, **updates)
-                    except Exception:
-                        pass
+                    client.update_run(run_id=run_id, **updates)
+                    if error:
+                        logger.debug(
+                            "LangSmith trace ERROR: %s [%s]",
+                            run_name, str(run_id)[:8],
+                        )
+                    else:
+                        logger.debug(
+                            "LangSmith trace END: %s [%s]",
+                            run_name, str(run_id)[:8],
+                        )
+                except Exception:
+                    pass
 
         return wrapper
     return decorator
