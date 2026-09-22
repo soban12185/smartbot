@@ -23,6 +23,7 @@ from tracing import (
     trace_llm_call,
     submit_feedback,
     is_tracing_enabled,
+    flush_langsmith_traces,
 )
 
 RATE_LIMIT_PER_MINUTE = int(os.environ.get('RATE_LIMIT_PER_MINUTE', '10'))
@@ -133,6 +134,19 @@ except Exception as e:
 DUMMY_API_KEY = "DUMMY_BOOKING_123"
 
 
+@app.after_request
+def _flush_langsmith_traces(response):
+    """Finalize/collect LangChain + LangGraph runs before the response ships.
+
+    LangChain auto-tracing (LangChainTracer) persists run create/update ops
+    on a background batching thread. On Vercel serverless the process is
+    frozen right after the response, so unflushed ops are lost and the root
+    "LangGraph" run stays PENDING. Flushing here uses the official LangSmith
+    wait/flush mechanism and is bounded/non-blocking."""
+    flush_langsmith_traces()
+    return response
+
+
 # Routes
 @app.route('/')
 def index():
@@ -195,8 +209,15 @@ def chat():
             
             # 3. Invoke LangGraph with tracing
             with trace_langgraph(query, {"session_id": session_id, "has_ltm_context": bool(ltm_context)}) as lg_run:
-                output = chat_graph.invoke(inputs, config=config)
-                response_text = output["messages"][-1].content
+                lg_run_id = str(lg_run.id)[:8] if (lg_run is not None and lg_run.id) else "none"
+                logger.debug("LANGGRAPH TRACE START: run_name=langgraph_invoke run_id=%s execution_entered=True exception=False", lg_run_id)
+                try:
+                    output = chat_graph.invoke(inputs, config=config)
+                    response_text = output["messages"][-1].content
+                    logger.debug("LANGGRAPH TRACE END: run_name=langgraph_invoke run_id=%s execution_completed=True exception=False", lg_run_id)
+                except Exception:
+                    logger.debug("LANGGRAPH TRACE ERROR: run_name=langgraph_invoke run_id=%s execution_completed=False exception=True", lg_run_id)
+                    raise
 
             # 4. Save to LTM
             try:
@@ -406,7 +427,7 @@ def service_search():
                 special_requirements=special_requirements,
             )
             if run is not None:
-                run.add_outputs(result)
+                run.end(outputs=result)
 
         return jsonify(result)
 

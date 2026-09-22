@@ -22,6 +22,7 @@ import datetime
 import functools
 import logging
 import os
+import threading
 import time
 from contextlib import contextmanager
 from typing import Any, Callable, Dict, Generator, Optional
@@ -87,6 +88,52 @@ def is_tracing_enabled() -> bool:
     """Check if LangSmith tracing is enabled."""
     _get_client()
     return _tracing_enabled
+
+
+def flush_langsmith_traces(timeout: float = 3.0) -> None:
+    """
+    Flush pending LangSmith runs using the OFFICIAL LangChain/LangSmith
+    mechanism before a request completes.
+
+    LangChain/LangGraph auto-tracing (LangChainTracer) persists run create
+    and update operations on a background batching thread (langsmith
+    Client.tracing_queue). On serverless deployments (e.g. Vercel) the
+    process may be frozen immediately after the HTTP response is returned,
+    so anything the background thread has not yet sent is lost and the root
+    "LangGraph" run stays permanently PENDING. Flushing before responding
+    guarantees the collection of these runs.
+
+    This does NOT build a custom flush: it calls the official
+    `langchain_core.tracers.langchain.wait_for_all_tracers()` (which flushes
+    the shared cached client used by LangChainTracer) plus this module's own
+    client. Both calls run in a bounded worker thread so a slow or absent
+    LangSmith endpoint never blocks the request (non-blocking LangSmith).
+    """
+    targets: list = []
+
+    try:
+        from langchain_core.tracers.langchain import wait_for_all_tracers
+        targets.append(wait_for_all_tracers)
+    except Exception:
+        logger.debug("wait_for_all_tracers unavailable; skipping official flush")
+
+    if _client is not None:
+        client = _client
+        targets.append(lambda: client.flush())
+
+    if not targets:
+        return
+
+    def _run():
+        for target in targets:
+            try:
+                target()
+            except Exception:
+                logger.debug("LangSmith flush skipped (non-blocking)")
+
+    worker = threading.Thread(target=_run, daemon=True)
+    worker.start()
+    worker.join(timeout)
 
 
 # ---------------------------------------------------------------------------
