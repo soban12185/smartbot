@@ -164,7 +164,11 @@ def chat():
 
         data = request.get_json()
         query = data.get('query', '')
+        # LTM namespace = session_id (stable per user/browser session).
+        # LangGraph short-term thread = thread_id, defaults to session_id so a
+        # new chat thread does NOT change the long-term memory namespace.
         session_id = data.get('session_id', 'default_user')
+        thread_id = data.get('thread_id') or session_id
         
         if not query:
             return jsonify({'error': 'Query is required'}), 400
@@ -205,7 +209,7 @@ def chat():
                 user_message_text = f"{ltm_context}\n\nUser Question: {query}"
             
             inputs = {"messages": [HumanMessage(content=user_message_text)]}
-            config = {"configurable": {"thread_id": session_id}}
+            config = {"configurable": {"thread_id": thread_id}}
             
             # 3. Invoke LangGraph with tracing
             with trace_langgraph(query, {"session_id": session_id, "has_ltm_context": bool(ltm_context)}) as lg_run:
@@ -427,7 +431,8 @@ def service_search():
                 special_requirements=special_requirements,
             )
             if run is not None:
-                run.end(outputs=result)
+                run_error = None if result.get("success") else result.get("error_code")
+                run.end(outputs=result, error=run_error)
 
         return jsonify(result)
 

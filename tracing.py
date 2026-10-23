@@ -165,11 +165,15 @@ class _TraceRun:
     def id(self):
         return self._run_id
 
-    def end(self, outputs: Optional[Dict[str, Any]] = None):
+    def end(
+        self,
+        outputs: Optional[Dict[str, Any]] = None,
+        error: Optional[Any] = None,
+    ):
         """Finalize the run with the given outputs (replaces accumulated ones)."""
         if outputs is not None:
             self.outputs = outputs
-        self._finalize()
+        self._finalize(error=error)
 
     def add_outputs(self, outputs: Optional[Dict[str, Any]] = None):
         """Accumulate outputs without finalizing the run yet."""
@@ -248,7 +252,14 @@ def trace_run(
     If LangSmith is unavailable, yields None and the code still runs.
     Exceptions from the wrapped code are recorded on the run and re-raised.
     """
-    client = _get_client()
+    try:
+        client = _get_client()
+    except Exception as exc:
+        # LangSmith must never become a hard dependency of a request.
+        logger.debug("LangSmith client unavailable (non-blocking): %s", exc)
+        yield None
+        return
+
     if not client:
         yield None
         return

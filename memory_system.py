@@ -15,8 +15,13 @@ from typing import Any, Optional
 import psycopg
 from psycopg.rows import dict_row
 from psycopg_pool import ConnectionPool
+from dotenv import load_dotenv
 
 logger = logging.getLogger(__name__)
+
+# Load .env BEFORE resolving DATABASE_URI so the correct PostgreSQL URL is
+# used even when this module is imported before main.py calls load_dotenv().
+load_dotenv()
 
 DATABASE_URI = os.environ.get(
     "DATABASE_URI",
@@ -26,15 +31,30 @@ DATABASE_URI = os.environ.get(
 _pool: Optional[ConnectionPool] = None
 
 
+def _resolve_database_uri() -> str:
+    """Resolve DATABASE_URI lazily, after .env is loaded.
+
+    Kept separate so the pool always targets the configured PostgreSQL even if
+    DATABASE_URI is provided at runtime via environment or .env."""
+    return os.environ.get(
+        "DATABASE_URI",
+        "postgresql://postgres:postgres@localhost:5432/langgraph_memory",
+    )
+
+
 def _get_pool() -> ConnectionPool:
     """Lazy singleton connection pool — safe for Vercel Lambda."""
     global _pool
     if _pool is None:
         _pool = ConnectionPool(
-            DATABASE_URI,
+            _resolve_database_uri(),
             min_size=1,
             max_size=5,
-            kwargs={"row_factory": dict_row, "sslmode": "require"},
+            kwargs={
+                "row_factory": dict_row,
+                "sslmode": "require",
+                "connect_timeout": 10,
+            },
         )
         _init_tables()
     return _pool
@@ -81,7 +101,7 @@ def get_checkpointer():
     """Return a PostgresSaver checkpointer for LangGraph."""
     try:
         from langgraph.checkpoint.postgres import PostgresSaver
-        return PostgresSaver.from_conn_string(DATABASE_URI)
+        return PostgresSaver.from_conn_string(_resolve_database_uri())
     except Exception as e:
         logger.warning(f"PostgresSaver unavailable: {e}")
         from langgraph.checkpoint.memory import MemorySaver
@@ -95,15 +115,21 @@ class LongTermMemory:
     """Simple Postgres-backed key-value store for user facts."""
 
     def put(self, session_id: str, key: str, value: dict[str, Any]):
+        logger.debug("MEMORY WRITE START session=%s key=%s", session_id, key)
         pool = _get_pool()
-        with pool.connection() as conn:
-            conn.execute("""
-                INSERT INTO ltm_facts (session_id, key, value, updated_at)
-                VALUES (%s, %s, %s, NOW())
-                ON CONFLICT (session_id, key)
-                DO UPDATE SET value = EXCLUDED.value, updated_at = NOW()
-            """, (session_id, key, json.dumps(value)))
-            conn.commit()
+        try:
+            with pool.connection() as conn:
+                conn.execute("""
+                    INSERT INTO ltm_facts (session_id, key, value, updated_at)
+                    VALUES (%s, %s, %s, NOW())
+                    ON CONFLICT (session_id, key)
+                    DO UPDATE SET value = EXCLUDED.value, updated_at = NOW()
+                """, (session_id, key, json.dumps(value)))
+                conn.commit()
+            logger.debug("MEMORY WRITE SUCCESS session=%s key=%s", session_id, key)
+        except Exception:
+            logger.debug("MEMORY WRITE ERROR session=%s key=%s", session_id, key)
+            raise
 
     def get(self, session_id: str, key: str) -> Optional[dict[str, Any]]:
         pool = _get_pool()
@@ -133,15 +159,23 @@ class LongTermMemory:
         return [r["key"] for r in rows]
 
     def search(self, session_id: str, text: str) -> list[dict]:
+        logger.debug("MEMORY SEARCH START session=%s", session_id)
         pool = _get_pool()
-        with pool.connection() as conn:
-            rows = conn.execute(
-                """SELECT key, value FROM ltm_facts
-                   WHERE session_id = %s AND value::text ILIKE %s
-                   LIMIT 5""",
-                (session_id, f"%{text}%"),
-            ).fetchall()
-        return [{"key": r["key"], "value": r["value"]} for r in rows]
+        try:
+            with pool.connection() as conn:
+                rows = conn.execute(
+                    """SELECT key, value FROM ltm_facts
+                       WHERE session_id = %s AND value::text ILIKE %s
+                       LIMIT 5""",
+                    (session_id, f"%{text}%"),
+                ).fetchall()
+            results = [{"key": r["key"], "value": r["value"]} for r in rows]
+            logger.debug("MEMORY SEARCH RESULTS COUNT session=%s count=%d", session_id, len(results))
+            logger.debug("MEMORY SEARCH RESULTS session=%s keys=%s", session_id, [r["key"] for r in results])
+            return results
+        except Exception:
+            logger.debug("MEMORY SEARCH ERROR session=%s", session_id)
+            raise
 
     def save_conversation(self, session_id: str, query: str, response: str):
         pool = _get_pool()

@@ -51,8 +51,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // State
     let isProcessing = false;
-    let sessionId = localStorage.getItem('sb_session') || generateId();
-    localStorage.setItem('sb_session', sessionId);
+    let serviceSearchRequestId = 0;
+    let serviceSearchController = null;
+    // Stable long-term memory namespace: persists across chats (and reloads).
+    let userId = localStorage.getItem('sb_user_session') || generateId();
+    localStorage.setItem('sb_user_session', userId);
+    // Per-chat LangGraph thread (short-term memory): regenerated on New Chat.
+    let threadId = generateId();
+    let sessionId = userId; // kept for the /api/chat session_id contract
     let currentChatId = null;
 
     // ─────────────────────────────────────────────────
@@ -138,7 +144,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const res = await fetch('/api/chat', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ query: message, session_id: sessionId })
+                body: JSON.stringify({ query: message, session_id: sessionId, thread_id: threadId })
             });
 
             const data = await res.json();
@@ -614,99 +620,88 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function searchServices() {
-        const location = (serviceLocation?.value || '').trim();
-        const category = (serviceCategory?.value || '').trim();
-        const requirements = (serviceRequirements?.value || '').trim();
+        const client = window.SmartBotServiceFinder;
+        if (!client) {
+            servicesResults.innerHTML = `<div class="loader-text">Service search failed to initialize. Please reload the page.</div>`;
+            return;
+        }
 
-        if (!location) {
+        const payload = client.buildServicePayload(
+            serviceLocation?.value || '',
+            serviceCategory?.value || '',
+            serviceRequirements?.value || ''
+        );
+
+        if (!payload.location) {
             servicesResults.innerHTML = `<div class="loader-text">Please enter a location.</div>`;
             return;
         }
-        if (!category) {
+        if (!payload.service_category) {
             servicesResults.innerHTML = `<div class="loader-text">Please select a service category.</div>`;
             return;
         }
 
+        // Cancel any in-flight search and tag this request so late responses
+        // from an older search can never overwrite newer results.
+        const requestId = ++serviceSearchRequestId;
+        if (serviceSearchController) serviceSearchController.abort();
+        const controller = new AbortController();
+        serviceSearchController = controller;
+        let timedOut = false;
+        const timeoutId = setTimeout(() => {
+            timedOut = true;
+            controller.abort();
+        }, 30000);
+
         serviceSearchBtn.disabled = true;
-        servicesResults.innerHTML = `<div class="loader-text">Searching for ${escapeHtml(category)} services in ${escapeHtml(location)}...</div>`;
+        servicesResults.innerHTML = `<div class="loader-text">Searching for ${escapeHtml(payload.service_category)} services in ${escapeHtml(payload.location)}...</div>`;
 
         try {
             const res = await fetch('/api/services/search', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    location: location,
-                    service_category: category,
-                    special_requirements: requirements,
-                }),
+                body: JSON.stringify(payload),
+                signal: controller.signal,
             });
-            const data = await res.json();
 
-            if (!res.ok || data.error) {
-                servicesResults.innerHTML = `<div class="loader-text">${escapeHtml(data.error || 'Search failed. Please try again.')}</div>`;
+            if (client.isStaleResponse(requestId, serviceSearchRequestId)) return;
+
+            const rawBody = await res.text();
+            if (client.isStaleResponse(requestId, serviceSearchRequestId)) return;
+
+            let data = null;
+            try {
+                data = rawBody ? JSON.parse(rawBody) : null;
+            } catch {
+                servicesResults.innerHTML = `<div class="loader-text">Service search returned an invalid response. Please try again.</div>`;
                 return;
             }
 
-            if (!data.results || data.results.length === 0) {
-                servicesResults.innerHTML = `<div class="loader-text">No matching services found in ${escapeHtml(location)} for your requirements.</div>`;
+            const outcome = client.classifyServiceResponse(
+                { ok: res.ok, status: res.status }, data
+            );
+
+            if (outcome.state === 'error' || outcome.state === 'empty') {
+                servicesResults.innerHTML = `<div class="loader-text">${escapeHtml(outcome.message)}</div>`;
                 return;
             }
 
-            renderServiceResults(data);
+            servicesResults.innerHTML = client.renderServiceResultsHtml(outcome.data);
+
         } catch (err) {
-            servicesResults.innerHTML = `<div class="loader-text">Service search is temporarily unavailable. Please try again.</div>`;
+            if (client.isStaleResponse(requestId, serviceSearchRequestId)) return;
+            if (timedOut) {
+                servicesResults.innerHTML = `<div class="loader-text">Service search timed out. Please try again.</div>`;
+            } else {
+                servicesResults.innerHTML = `<div class="loader-text">Service search is temporarily unavailable. Please try again.</div>`;
+            }
         } finally {
-            serviceSearchBtn.disabled = false;
+            clearTimeout(timeoutId);
+            if (requestId === serviceSearchRequestId) {
+                serviceSearchController = null;
+                serviceSearchBtn.disabled = false;
+            }
         }
-    }
-
-    function renderServiceResults(data) {
-        const { results, count, location, timestamp } = data;
-        const loc = location || (data.query && data.query.location) || '';
-
-        let html = `<div class="service-results-header" style="font-size:14px;color:var(--text-secondary);margin-bottom:12px;">
-            <strong>${count} matching service${count !== 1 ? 's' : ''}</strong> found near ${escapeHtml(loc)}
-        </div>`;
-
-        results.forEach(s => {
-            const ratingHtml = s.rating
-                ? `<span class="star">★</span> ${s.rating}`
-                : '';
-            const addressRow = s.address
-                ? `<div class="meta-row"><span class="meta-icon">📍</span><span>${escapeHtml(s.address)}</span></div>`
-                : '';
-            const phoneRow = s.phone
-                ? `<div class="meta-row"><span class="meta-icon">📞</span><span>${escapeHtml(s.phone)}</span></div>`
-                : '';
-            const descRow = s.description
-                ? `<div class="meta-row service-card-desc"><span>${escapeHtml(s.description)}</span></div>`
-                : '';
-
-            let actionsHtml = '';
-            if (s.website) actionsHtml += `<a href="${escapeHtml(s.website)}" target="_blank" rel="noopener" class="secondary">🌐 Website</a>`;
-            if (s.phone) actionsHtml += `<a href="tel:${escapeHtml(s.phone)}" class="secondary">📞 Call</a>`;
-            if (s.source_url && s.source_url !== s.website) actionsHtml += `<a href="${escapeHtml(s.source_url)}" target="_blank" rel="noopener" class="secondary">🔗 View Source</a>`;
-
-            html += `
-            <div class="service-card">
-                <div class="service-card-header">
-                    <div class="service-card-name">${escapeHtml(s.name)}</div>
-                    <div class="service-card-rating">${ratingHtml}</div>
-                </div>
-                <div class="service-card-meta">
-                    ${addressRow}
-                    ${phoneRow}
-                    ${descRow}
-                </div>
-                <div class="service-card-actions">${actionsHtml}</div>
-            </div>`;
-        });
-
-        if (timestamp) {
-            html += `<div class="service-timestamp">Web results fetched at ${escapeHtml(timestamp)}</div>`;
-        }
-
-        servicesResults.innerHTML = html;
     }
 
     // ─────────────────────────────────────────────────
@@ -973,11 +968,14 @@ document.addEventListener('DOMContentLoaded', () => {
     function clearLoggedInUser() {
         localStorage.removeItem('sb_user');
         localStorage.removeItem('sb_session');
+        localStorage.removeItem('sb_user_session');
         Object.keys(localStorage).forEach(key => {
             if (key === 'sb_history') localStorage.removeItem(key);
         });
-        sessionId = generateId();
-        localStorage.setItem('sb_session', sessionId);
+        userId = generateId();
+        localStorage.setItem('sb_user_session', userId);
+        threadId = generateId();
+        sessionId = userId;
         if (chatArea) chatArea.innerHTML = '';
         if (welcomeState) welcomeState.style.display = '';
         const nameEl = document.getElementById('sidebar-user-name');
@@ -1246,8 +1244,10 @@ document.addEventListener('DOMContentLoaded', () => {
         chatInput.style.height = 'auto';
         sendBtn.disabled = true;
         currentChatId = null;
-        sessionId = generateId();
-        localStorage.setItem('sb_session', sessionId);
+        // New LangGraph thread, but keep the same stable user identity so
+        // long-term memory (name, preferences, facts) carries across chats.
+        threadId = generateId();
+        sessionId = userId;
         switchView('chat');
         chatInput.focus();
         if (window.innerWidth <= 768) closeSidebar();
