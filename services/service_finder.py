@@ -247,18 +247,20 @@ _LOCATION_GROUPS: List[Dict[str, Any]] = [
     {"kind": "city", "canonical": "chandigarh", "display": "Chandigarh", "state": "Chandigarh", "aliases": ["chandigarh"]},
     {"kind": "city", "canonical": "visakhapatnam", "display": "Visakhapatnam", "state": "Andhra Pradesh", "aliases": ["visakhapatnam", "vizag"]},
     {"kind": "city", "canonical": "trichy", "display": "Tiruchirappalli", "state": "Tamil Nadu", "aliases": ["trichy", "tiruchirappalli", "tiruchirapalli"]},
+    {"kind": "city", "canonical": "thoothukudi", "display": "Thoothukudi", "state": "Tamil Nadu", "aliases": ["thoothukudi", "tuticorin", "toothukudi"]},
     {"kind": "city", "canonical": "salem", "display": "Salem", "state": "Tamil Nadu", "aliases": ["salem"]},
     {"kind": "city", "canonical": "erode", "display": "Erode", "state": "Tamil Nadu", "aliases": ["erode"]},
     {"kind": "city", "canonical": "tiruppur", "display": "Tiruppur", "state": "Tamil Nadu", "aliases": ["tiruppur", "tirupur"]},
+    {"kind": "city", "canonical": "madurai", "display": "Madurai", "state": "Tamil Nadu", "aliases": ["madurai"]},
     # Common localities with alternative spellings (extendable without changing
     # the matching algorithm).
     {"kind": "area", "canonical": "t nagar", "display": "T Nagar", "city": "chennai", "state": "Tamil Nadu",
-     "aliases": ["t nagar", "t. nagar", "t.nagar", "t-nagar", "thyagaraya nagar", "thyagarayanagar"]},
+     "aliases": ["t nagar", "t. nagar", "t.nagar", "t-nagar", "thyagaraya nagar", "thyagarayanagar", "thiyagaraya nagar"]},
     {"kind": "area", "canonical": "anna nagar", "display": "Anna Nagar", "city": "chennai", "state": "Tamil Nadu",
-     "aliases": ["anna nagar"]},
-    {"kind": "area", "canonical": "adyar", "display": "Adyar", "city": "chennai", "state": "Tamil Nadu", "aliases": ["adyar"]},
+     "aliases": ["anna nagar", "annanagar"]},
+    {"kind": "area", "canonical": "adyar", "display": "Adyar", "city": "chennai", "state": "Tamil Nadu", "aliases": ["adyar", "aadyar"]},
     {"kind": "area", "canonical": "mylapore", "display": "Mylapore", "city": "chennai", "state": "Tamil Nadu", "aliases": ["mylapore"]},
-    {"kind": "area", "canonical": "velachery", "display": "Velachery", "city": "chennai", "state": "Tamil Nadu", "aliases": ["velachery"]},
+    {"kind": "area", "canonical": "velachery", "display": "Velachery", "city": "chennai", "state": "Tamil Nadu", "aliases": ["velachery", "velacherri"]},
     {"kind": "area", "canonical": "besant nagar", "display": "Besant Nagar", "city": "chennai", "state": "Tamil Nadu", "aliases": ["besant nagar"]},
     {"kind": "area", "canonical": "porur", "display": "Porur", "city": "chennai", "state": "Tamil Nadu", "aliases": ["porur"]},
     {"kind": "area", "canonical": "tambaram", "display": "Tambaram", "city": "chennai", "state": "Tamil Nadu", "aliases": ["tambaram"]},
@@ -1102,7 +1104,30 @@ def suggest_locations(query: str, limit: int = 8) -> List[Dict[str, Any]]:
         aliases = group.get("aliases") or []
         matched_alias = _matched_alias(q, q.replace(" ", ""), aliases)
         if not matched_alias:
-            continue
+            # Try prefix match against aliases for short queries
+            for alias in aliases:
+                norm_alias = _normalize_for_matching(alias)
+                if not norm_alias:
+                    continue
+                if norm_alias.startswith(q) or q.startswith(norm_alias):
+                    matched_alias = norm_alias
+                    break
+                # also match by token prefix
+                alias_tokens = norm_alias.split()
+                if alias_tokens and alias_tokens[0].startswith(q):
+                    matched_alias = norm_alias
+                    break
+                if len(q) >= 2 and any(tok.startswith(q) for tok in alias_tokens):
+                    matched_alias = norm_alias
+                    break
+            # Direct contains against display/canonical as fallback
+            if not matched_alias:
+                disp = _normalize_for_matching(group.get("display") or "")
+                canon = _normalize_for_matching(group.get("canonical") or "")
+                if q and len(q) >= 2 and (disp.startswith(q) or canon.startswith(q) or q in disp or q in canon):
+                    matched_alias = disp or canon
+            if not matched_alias:
+                continue
 
         kind = group.get("kind")
         if kind == "city":
@@ -1163,14 +1188,45 @@ def suggest_locations(query: str, limit: int = 8) -> List[Dict[str, Any]]:
             "_matched_alias": matched_norm,
         })
 
-    # Also handle Bangalore/Bengaluru aliases explicitly mentioned
-    q_stripped = q.replace(" ", "")
-    # If user types Bangalore, ensure Bengaluru is suggested
-    if "bangalore" in q or "bengaluru" in q:
-        pass  # already handled via aliases
+    # If a city is matched, also suggest popular localities in that city for better UX
+    matched_cities = set()
+    for s in suggestions:
+        if s.get("type") == "city" and s.get("city"):
+            matched_cities.add(_normalize_for_matching(s["city"]))
+        elif s.get("city"):
+            matched_cities.add(_normalize_for_matching(s["city"]))
+
+    for group in _LOCATION_GROUPS:
+        if group.get("kind") != "area":
+            continue
+        area_city = _normalize_for_matching(group.get("city") or "")
+        if area_city not in matched_cities:
+            continue
+        display_name = group["display"]
+        city_canonical = group.get("city") or ""
+        city_info = _get_city_info(city_canonical)
+        city_display = city_info.get("city_display") or (city_canonical.title() if city_canonical else "")
+        if city_display:
+            full_display = f"{display_name}, {city_display}"
+        else:
+            full_display = display_name
+        key = _normalize_for_matching(full_display)
+        if key in seen:
+            continue
+        seen.add(key)
+        suggestions.append({
+            "display_name": full_display,
+            "city": city_display or "",
+            "locality": group["display"],
+            "state": group.get("state") or city_info.get("state", ""),
+            "type": "neighborhood",
+            "source": "local_dataset",
+            "_score": 25,
+            "_matched_alias": display_name.lower(),
+        })
 
     # Sort by score desc, then by length for stability
-    suggestions.sort(key=lambda x: (-x["_score"], len(x.get("display_name", ""))))
+    suggestions.sort(key=lambda x: (-x.get("_score", 0), len(x.get("display_name", ""))))
     
     # Remove internal scoring fields
     results = []

@@ -737,7 +737,7 @@ document.addEventListener('DOMContentLoaded', () => {
             locationSuggestLoadingEl.setAttribute('aria-busy', 'true');
         }
         try {
-            const res = await fetch(`/api/locations/suggest?q=${encodeURIComponent(query)}&limit=8`);
+            const res = await fetch(`/api/locations/suggest?q=${encodeURIComponent(query)}&limit=10`);
             if (requestId !== locationSuggestRequestId) return;
             let data = null;
             try {
@@ -757,7 +757,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 locationSuggestLoadingEl.style.display = 'none';
                 locationSuggestLoadingEl.setAttribute('aria-busy', 'false');
             }
-            closeLocationSuggestions();
+            if (locationSuggestionsEl) {
+                locationSuggestionsEl.innerHTML = '<div class="location-suggestion-empty">Unable to load suggestions. Try again.</div>';
+                locationSuggestionsEl.classList.add('open');
+                if (serviceLocation) {
+                    serviceLocation.setAttribute('aria-expanded', 'true');
+                    serviceLocation.setAttribute('aria-controls', 'location-suggestions');
+                }
+            }
         }
     }
 
@@ -768,7 +775,15 @@ document.addEventListener('DOMContentLoaded', () => {
         locationSuggestActiveIndex = -1;
 
         if (locationSuggestItems.length === 0) {
-            closeLocationSuggestions();
+            const empty = document.createElement('div');
+            empty.className = 'location-suggestion-empty';
+            empty.textContent = 'No locations found. Try a city name (e.g., Chennai, Bangalore).';
+            locationSuggestionsEl.appendChild(empty);
+            locationSuggestionsEl.classList.add('open');
+            if (serviceLocation) {
+                serviceLocation.setAttribute('aria-expanded', 'true');
+                serviceLocation.setAttribute('aria-controls', 'location-suggestions');
+            }
             return;
         }
 
@@ -782,20 +797,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const main = document.createElement('div');
             main.className = 'location-suggestion-main';
-            main.textContent = item.display_name || '';
+            main.textContent = item.display_name || item.locality || item.city || '';
 
             const sub = document.createElement('div');
             sub.className = 'location-suggestion-sub';
             const parts = [];
-            if (item.type) parts.push(item.type);
+            if (item.type && item.type !== 'city') parts.push(item.type);
             if (item.city && item.locality) parts.push(item.city);
             else if (item.city && !item.locality) parts.push(item.city);
             if (item.state) parts.push(item.state);
-            sub.textContent = parts.filter(Boolean).join(' • ');
-
-            el.appendChild(main);
-            if (parts.filter(Boolean).length > 0) {
+            const subText = parts.filter(Boolean).join(' • ');
+            if (subText) {
+                sub.textContent = subText;
+                el.appendChild(main);
                 el.appendChild(sub);
+            } else {
+                el.appendChild(main);
             }
 
             el.addEventListener('mousedown', (e) => {
