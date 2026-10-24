@@ -247,7 +247,11 @@
                     <div class="service-form-grid">
                         <div class="form-group">
                             <label for="service-location">Location</label>
-                            <input type="text" id="service-location" placeholder="e.g., Bangalore, Koramangala" autocomplete="off" required>
+                            <div class="location-autocomplete" id="location-autocomplete">
+                                <input type="text" id="service-location" class="location-input" placeholder="e.g., Bangalore, Koramangala" autocomplete="off" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="location-suggestions" aria-haspopup="listbox" required>
+                                <div id="location-suggestions" class="location-suggestions" role="listbox" aria-label="Location suggestions"></div>
+                                <div id="location-suggest-loading" class="location-suggest-loading" aria-live="polite" aria-busy="false" style="display:none;">Loading...</div>
+                            </div>
                         </div>
                         <div class="form-group">
                             <label for="service-category">Service Category</label>

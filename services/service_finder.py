@@ -229,36 +229,58 @@ _REJECT_TITLE_KEYWORDS = [
 
 _LOCATION_GROUPS: List[Dict[str, Any]] = [
     # Cities (equivalent spellings / older names)
-    {"kind": "city", "canonical": "chennai", "display": "Chennai", "aliases": ["chennai", "madras"]},
-    {"kind": "city", "canonical": "bengaluru", "display": "Bengaluru", "aliases": ["bengaluru", "bangalore"]},
-    {"kind": "city", "canonical": "mumbai", "display": "Mumbai", "aliases": ["mumbai", "bombay"]},
-    {"kind": "city", "canonical": "kolkata", "display": "Kolkata", "aliases": ["kolkata", "calcutta"]},
-    {"kind": "city", "canonical": "delhi", "display": "Delhi", "aliases": ["delhi", "new delhi"]},
-    {"kind": "city", "canonical": "hyderabad", "display": "Hyderabad", "aliases": ["hyderabad"]},
-    {"kind": "city", "canonical": "coimbatore", "display": "Coimbatore", "aliases": ["coimbatore", "kovai"]},
-    {"kind": "city", "canonical": "madurai", "display": "Madurai", "aliases": ["madurai"]},
-    {"kind": "city", "canonical": "pune", "display": "Pune", "aliases": ["pune", "poona"]},
-    {"kind": "city", "canonical": "mysuru", "display": "Mysuru", "aliases": ["mysuru", "mysore"]},
-    {"kind": "city", "canonical": "kochi", "display": "Kochi", "aliases": ["kochi", "cochin"]},
-    {"kind": "city", "canonical": "thiruvananthapuram", "display": "Thiruvananthapuram", "aliases": ["thiruvananthapuram", "trivandrum"]},
-    {"kind": "city", "canonical": "ahmedabad", "display": "Ahmedabad", "aliases": ["ahmedabad"]},
-    {"kind": "city", "canonical": "jaipur", "display": "Jaipur", "aliases": ["jaipur"]},
-    {"kind": "city", "canonical": "lucknow", "display": "Lucknow", "aliases": ["lucknow"]},
+    {"kind": "city", "canonical": "chennai", "display": "Chennai", "state": "Tamil Nadu", "aliases": ["chennai", "madras"]},
+    {"kind": "city", "canonical": "bengaluru", "display": "Bengaluru", "state": "Karnataka", "aliases": ["bengaluru", "bangalore"]},
+    {"kind": "city", "canonical": "mumbai", "display": "Mumbai", "state": "Maharashtra", "aliases": ["mumbai", "bombay"]},
+    {"kind": "city", "canonical": "kolkata", "display": "Kolkata", "state": "West Bengal", "aliases": ["kolkata", "calcutta"]},
+    {"kind": "city", "canonical": "delhi", "display": "Delhi", "state": "Delhi", "aliases": ["delhi", "new delhi"]},
+    {"kind": "city", "canonical": "hyderabad", "display": "Hyderabad", "state": "Telangana", "aliases": ["hyderabad"]},
+    {"kind": "city", "canonical": "coimbatore", "display": "Coimbatore", "state": "Tamil Nadu", "aliases": ["coimbatore", "kovai"]},
+    {"kind": "city", "canonical": "madurai", "display": "Madurai", "state": "Tamil Nadu", "aliases": ["madurai"]},
+    {"kind": "city", "canonical": "pune", "display": "Pune", "state": "Maharashtra", "aliases": ["pune", "poona"]},
+    {"kind": "city", "canonical": "mysuru", "display": "Mysuru", "state": "Karnataka", "aliases": ["mysuru", "mysore"]},
+    {"kind": "city", "canonical": "kochi", "display": "Kochi", "state": "Kerala", "aliases": ["kochi", "cochin"]},
+    {"kind": "city", "canonical": "thiruvananthapuram", "display": "Thiruvananthapuram", "state": "Kerala", "aliases": ["thiruvananthapuram", "trivandrum"]},
+    {"kind": "city", "canonical": "ahmedabad", "display": "Ahmedabad", "state": "Gujarat", "aliases": ["ahmedabad"]},
+    {"kind": "city", "canonical": "jaipur", "display": "Jaipur", "state": "Rajasthan", "aliases": ["jaipur"]},
+    {"kind": "city", "canonical": "lucknow", "display": "Lucknow", "state": "Uttar Pradesh", "aliases": ["lucknow"]},
+    {"kind": "city", "canonical": "chandigarh", "display": "Chandigarh", "state": "Chandigarh", "aliases": ["chandigarh"]},
+    {"kind": "city", "canonical": "visakhapatnam", "display": "Visakhapatnam", "state": "Andhra Pradesh", "aliases": ["visakhapatnam", "vizag"]},
+    {"kind": "city", "canonical": "trichy", "display": "Tiruchirappalli", "state": "Tamil Nadu", "aliases": ["trichy", "tiruchirappalli", "tiruchirapalli"]},
+    {"kind": "city", "canonical": "salem", "display": "Salem", "state": "Tamil Nadu", "aliases": ["salem"]},
+    {"kind": "city", "canonical": "erode", "display": "Erode", "state": "Tamil Nadu", "aliases": ["erode"]},
+    {"kind": "city", "canonical": "tiruppur", "display": "Tiruppur", "state": "Tamil Nadu", "aliases": ["tiruppur", "tirupur"]},
     # Common localities with alternative spellings (extendable without changing
     # the matching algorithm).
-    {"kind": "area", "canonical": "t nagar", "display": "T Nagar", "city": "chennai",
+    {"kind": "area", "canonical": "t nagar", "display": "T Nagar", "city": "chennai", "state": "Tamil Nadu",
      "aliases": ["t nagar", "t. nagar", "t.nagar", "t-nagar", "thyagaraya nagar", "thyagarayanagar"]},
-    {"kind": "area", "canonical": "anna nagar", "display": "Anna Nagar", "city": "chennai",
+    {"kind": "area", "canonical": "anna nagar", "display": "Anna Nagar", "city": "chennai", "state": "Tamil Nadu",
      "aliases": ["anna nagar"]},
-    {"kind": "area", "canonical": "adyar", "display": "Adyar", "city": "chennai", "aliases": ["adyar"]},
-    {"kind": "area", "canonical": "mylapore", "display": "Mylapore", "city": "chennai", "aliases": ["mylapore"]},
-    {"kind": "area", "canonical": "velachery", "display": "Velachery", "city": "chennai", "aliases": ["velachery"]},
-    {"kind": "area", "canonical": "besant nagar", "display": "Besant Nagar", "city": "chennai", "aliases": ["besant nagar"]},
-    {"kind": "area", "canonical": "porur", "display": "Porur", "city": "chennai", "aliases": ["porur"]},
-    {"kind": "area", "canonical": "tambaram", "display": "Tambaram", "city": "chennai", "aliases": ["tambaram"]},
-    {"kind": "area", "canonical": "koramangala", "display": "Koramangala", "city": "bengaluru", "aliases": ["koramangala"]},
-    {"kind": "area", "canonical": "indiranagar", "display": "Indiranagar", "city": "bengaluru", "aliases": ["indiranagar", "indira nagar"]},
-    {"kind": "area", "canonical": "whitefield", "display": "Whitefield", "city": "bengaluru", "aliases": ["whitefield"]},
+    {"kind": "area", "canonical": "adyar", "display": "Adyar", "city": "chennai", "state": "Tamil Nadu", "aliases": ["adyar"]},
+    {"kind": "area", "canonical": "mylapore", "display": "Mylapore", "city": "chennai", "state": "Tamil Nadu", "aliases": ["mylapore"]},
+    {"kind": "area", "canonical": "velachery", "display": "Velachery", "city": "chennai", "state": "Tamil Nadu", "aliases": ["velachery"]},
+    {"kind": "area", "canonical": "besant nagar", "display": "Besant Nagar", "city": "chennai", "state": "Tamil Nadu", "aliases": ["besant nagar"]},
+    {"kind": "area", "canonical": "porur", "display": "Porur", "city": "chennai", "state": "Tamil Nadu", "aliases": ["porur"]},
+    {"kind": "area", "canonical": "tambaram", "display": "Tambaram", "city": "chennai", "state": "Tamil Nadu", "aliases": ["tambaram"]},
+    {"kind": "area", "canonical": "nanganallur", "display": "Nanganallur", "city": "chennai", "state": "Tamil Nadu", "aliases": ["nanganallur"]},
+    {"kind": "area", "canonical": "guindy", "display": "Guindy", "city": "chennai", "state": "Tamil Nadu", "aliases": ["guindy"]},
+    {"kind": "area", "canonical": "egmore", "display": "Egmore", "city": "chennai", "state": "Tamil Nadu", "aliases": ["egmore"]},
+    {"kind": "area", "canonical": "kilpauk", "display": "Kilpauk", "city": "chennai", "state": "Tamil Nadu", "aliases": ["kilpauk"]},
+    {"kind": "area", "canonical": "thiruvanmiyur", "display": "Thiruvanmiyur", "city": "chennai", "state": "Tamil Nadu", "aliases": ["thiruvanmiyur"]},
+    {"kind": "area", "canonical": "koramangala", "display": "Koramangala", "city": "bengaluru", "state": "Karnataka", "aliases": ["koramangala"]},
+    {"kind": "area", "canonical": "indiranagar", "display": "Indiranagar", "city": "bengaluru", "state": "Karnataka", "aliases": ["indiranagar", "indira nagar"]},
+    {"kind": "area", "canonical": "whitefield", "display": "Whitefield", "city": "bengaluru", "state": "Karnataka", "aliases": ["whitefield"]},
+    {"kind": "area", "canonical": "hsr layout", "display": "HSR Layout", "city": "bengaluru", "state": "Karnataka", "aliases": ["hsr layout", "hsr"]},
+    {"kind": "area", "canonical": "jp nagar", "display": "JP Nagar", "city": "bengaluru", "state": "Karnataka", "aliases": ["jp nagar", "j p nagar"]},
+    {"kind": "area", "canonical": "btm layout", "display": "BTM Layout", "city": "bengaluru", "state": "Karnataka", "aliases": ["btm layout", "btm"]},
+    {"kind": "area", "canonical": "malleshwaram", "display": "Malleshwaram", "city": "bengaluru", "state": "Karnataka", "aliases": ["malleshwaram", "malleswaram"]},
+    {"kind": "area", "canonical": "rs puram", "display": "RS Puram", "city": "coimbatore", "state": "Tamil Nadu", "aliases": ["rs puram", "r.s. puram", "r s puram"]},
+    {"kind": "area", "canonical": "gandhipuram", "display": "Gandhipuram", "city": "coimbatore", "state": "Tamil Nadu", "aliases": ["gandhipuram"]},
+    {"kind": "area", "canonical": "peelamedu", "display": "Peelamedu", "city": "coimbatore", "state": "Tamil Nadu", "aliases": ["peelamedu"]},
+    {"kind": "area", "canonical": "saibaba colony", "display": "Saibaba Colony", "city": "coimbatore", "state": "Tamil Nadu", "aliases": ["saibaba colony", "sai baba colony"]},
+    {"kind": "area", "canonical": "bandra", "display": "Bandra", "city": "mumbai", "state": "Maharashtra", "aliases": ["bandra"]},
+    {"kind": "area", "canonical": "andheri", "display": "Andheri", "city": "mumbai", "state": "Maharashtra", "aliases": ["andheri"]},
+    {"kind": "area", "canonical": "powai", "display": "Powai", "city": "mumbai", "state": "Maharashtra", "aliases": ["powai"]},
 ]
 
 _STATE_NAMES = {
@@ -1041,6 +1063,125 @@ def _provider_error_message(status: Optional[int]) -> str:
 # ---------------------------------------------------------------------------
 # Main search function
 # ---------------------------------------------------------------------------
+
+# ---------------------------------------------------------------------------
+# Location autocomplete suggestions
+# ---------------------------------------------------------------------------
+
+
+def _get_city_info(canonical_city: Optional[str]) -> Dict[str, Any]:
+    if not canonical_city:
+        return {}
+    for group in _LOCATION_GROUPS:
+        if group["kind"] == "city" and group["canonical"] == canonical_city:
+            return {
+                "city_canonical": group["canonical"],
+                "city_display": group["display"],
+                "state": group.get("state", ""),
+            }
+    return {"city_canonical": canonical_city}
+
+
+def suggest_locations(query: str, limit: int = 8) -> List[Dict[str, Any]]:
+    """
+    Suggest locations (cities and localities) based on user input.
+
+    Returns structured suggestions with fields like display_name, city,
+    locality, state, type, source. Uses the built-in extensible dataset.
+    """
+    q = _normalize_for_matching(query)
+    if not q or len(q) < 2:
+        return []
+
+    limit = max(1, min(int(limit or 8), 10))
+    suggestions = []
+    seen = set()
+
+    # First pass: check all groups
+    for group in _LOCATION_GROUPS:
+        aliases = group.get("aliases") or []
+        matched_alias = _matched_alias(q, q.replace(" ", ""), aliases)
+        if not matched_alias:
+            continue
+
+        kind = group.get("kind")
+        if kind == "city":
+            display_name = group["display"]
+            city_canonical = group["canonical"]
+            city_display = group["display"]
+            locality = None
+            state = group.get("state", "")
+            type_ = "city"
+        elif kind == "area":
+            display_name = group["display"]
+            city_canonical = group.get("city") or ""
+            city_info = _get_city_info(city_canonical)
+            city_display = city_info.get("city_display") or (city_canonical.title() if city_canonical else "")
+            locality = group["display"]
+            state = group.get("state") or city_info.get("state", "")
+            type_ = "neighborhood"
+        else:
+            continue
+
+        # Build full display name with context
+        if type_ == "neighborhood" and city_display:
+            full_display = f"{display_name}, {city_display}"
+        else:
+            full_display = display_name
+
+        # Deduplicate
+        key = _normalize_for_matching(full_display)
+        if key in seen:
+            continue
+        seen.add(key)
+
+        # Calculate score for ranking
+        score = 0
+        matched_norm = matched_alias
+        if q == matched_norm:
+            score += 100  # exact match
+        elif matched_norm.startswith(q):
+            score += 50   # prefix match
+        elif q in matched_norm:
+            score += 20   # partial match
+        else:
+            score += 10
+
+        if type_ == "neighborhood":
+            score += 15  # locality matches rank high as per requirement
+        elif type_ == "city":
+            score += 10
+
+        suggestions.append({
+            "display_name": full_display,
+            "city": city_display or "",
+            "locality": locality or "",
+            "state": state or "",
+            "type": type_,
+            "source": "local_dataset",
+            "_score": score,
+            "_matched_alias": matched_norm,
+        })
+
+    # Also handle Bangalore/Bengaluru aliases explicitly mentioned
+    q_stripped = q.replace(" ", "")
+    # If user types Bangalore, ensure Bengaluru is suggested
+    if "bangalore" in q or "bengaluru" in q:
+        pass  # already handled via aliases
+
+    # Sort by score desc, then by length for stability
+    suggestions.sort(key=lambda x: (-x["_score"], len(x.get("display_name", ""))))
+    
+    # Remove internal scoring fields
+    results = []
+    for s in suggestions:
+        s_clean = {k: v for k, v in s.items() if not k.startswith("_")}
+        results.append(s_clean)
+        if len(results) >= limit:
+            break
+
+    return results
+
 
 def search_services(
     location: str,

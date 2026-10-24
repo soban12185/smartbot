@@ -31,6 +31,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const serviceRequirements = document.getElementById('service-requirements');
     const serviceSearchBtn  = document.getElementById('service-search-btn');
     const servicesResults   = document.getElementById('services-results');
+    const locationSuggestionsEl = document.getElementById('location-suggestions');
+    const locationSuggestLoadingEl = document.getElementById('location-suggest-loading');
+    const locationAutocompleteEl = document.getElementById('location-autocomplete');
 
     // Auth
     const btnLogin  = document.getElementById('btn-login');
@@ -615,8 +618,210 @@ document.addEventListener('DOMContentLoaded', () => {
 
         servicesForm.addEventListener('submit', async e => {
             e.preventDefault();
+            // If a suggestion is highlighted, let user select it via Enter; but
+            // form submission should still work normally
+            closeLocationSuggestions();
             await searchServices();
         });
+
+        if (serviceLocation) {
+            setupLocationAutocomplete(serviceLocation);
+        }
+    }
+
+    let locationSuggestTimer = null;
+    let locationSuggestRequestId = 0;
+    let locationSuggestActiveIndex = -1;
+    let locationSuggestItems = [];
+
+    function closeLocationSuggestions() {
+        if (locationSuggestionsEl) {
+            locationSuggestionsEl.classList.remove('open');
+            locationSuggestionsEl.innerHTML = '';
+        }
+        if (locationSuggestLoadingEl) {
+            locationSuggestLoadingEl.style.display = 'none';
+            locationSuggestLoadingEl.setAttribute('aria-busy', 'false');
+        }
+        if (serviceLocation) {
+            serviceLocation.setAttribute('aria-expanded', 'false');
+        }
+        locationSuggestActiveIndex = -1;
+        locationSuggestItems = [];
+    }
+
+    function setupLocationAutocomplete(input) {
+        input.addEventListener('input', () => {
+            const val = input.value || '';
+            if (locationSuggestTimer) {
+                clearTimeout(locationSuggestTimer);
+            }
+            locationSuggestActiveIndex = -1;
+            locationSuggestItems = [];
+
+            if (val.trim().length < 2) {
+                closeLocationSuggestions();
+                return;
+            }
+
+            locationSuggestTimer = setTimeout(() => {
+                fetchLocationSuggestions(val.trim());
+            }, 280);
+        });
+
+        input.addEventListener('keydown', (e) => {
+            if (!locationSuggestionsEl) return;
+            const isOpen = locationSuggestionsEl.classList.contains('open') || (locationSuggestItems && locationSuggestItems.length > 0);
+            if (!isOpen && locationSuggestItems.length === 0) {
+                if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+                    // try to trigger suggestions
+                }
+            }
+
+            if (e.key === 'ArrowDown') {
+                if (locationSuggestItems.length === 0) {
+                    const val = input.value || '';
+                    if (val.trim().length >= 2 && !locationSuggestTimer) {
+                        fetchLocationSuggestions(val.trim());
+                    }
+                    return;
+                }
+                e.preventDefault();
+                locationSuggestActiveIndex = (locationSuggestActiveIndex + 1) % locationSuggestItems.length;
+                updateLocationActive();
+            } else if (e.key === 'ArrowUp') {
+                if (locationSuggestItems.length === 0) return;
+                e.preventDefault();
+                locationSuggestActiveIndex = (locationSuggestActiveIndex - 1 + locationSuggestItems.length) % locationSuggestItems.length;
+                updateLocationActive();
+            } else if (e.key === 'Enter') {
+                if (locationSuggestActiveIndex >= 0 && locationSuggestItems[locationSuggestActiveIndex]) {
+                    e.preventDefault();
+                    const item = locationSuggestItems[locationSuggestActiveIndex];
+                    selectLocationSuggestion(item);
+                }
+                // if no active suggestion, do not steal form submit
+            } else if (e.key === 'Escape') {
+                closeLocationSuggestions();
+            }
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!locationAutocompleteEl) return;
+            if (!locationAutocompleteEl.contains(e.target)) {
+                closeLocationSuggestions();
+            }
+        });
+    }
+
+    function updateLocationActive() {
+        if (!locationSuggestionsEl) return;
+        const items = locationSuggestionsEl.querySelectorAll('.location-suggestion-item');
+        items.forEach((el, idx) => {
+            if (idx === locationSuggestActiveIndex) {
+                el.classList.add('active');
+                el.setAttribute('aria-selected', 'true');
+                el.scrollIntoView({ block: 'nearest' });
+            } else {
+                el.classList.remove('active');
+                el.setAttribute('aria-selected', 'false');
+            }
+        });
+    }
+
+    async function fetchLocationSuggestions(query) {
+        if (!locationSuggestionsEl) return;
+        const requestId = ++locationSuggestRequestId;
+        if (locationSuggestLoadingEl) {
+            locationSuggestLoadingEl.style.display = 'block';
+            locationSuggestLoadingEl.setAttribute('aria-busy', 'true');
+        }
+        try {
+            const res = await fetch(`/api/locations/suggest?q=${encodeURIComponent(query)}&limit=8`);
+            if (requestId !== locationSuggestRequestId) return;
+            let data = null;
+            try {
+                data = await res.json();
+            } catch {
+                data = null;
+            }
+            if (requestId !== locationSuggestRequestId) return;
+            if (locationSuggestLoadingEl) {
+                locationSuggestLoadingEl.style.display = 'none';
+                locationSuggestLoadingEl.setAttribute('aria-busy', 'false');
+            }
+            renderLocationSuggestions((data && data.suggestions) || []);
+        } catch {
+            if (requestId !== locationSuggestRequestId) return;
+            if (locationSuggestLoadingEl) {
+                locationSuggestLoadingEl.style.display = 'none';
+                locationSuggestLoadingEl.setAttribute('aria-busy', 'false');
+            }
+            closeLocationSuggestions();
+        }
+    }
+
+    function renderLocationSuggestions(suggestions) {
+        if (!locationSuggestionsEl) return;
+        locationSuggestionsEl.innerHTML = '';
+        locationSuggestItems = Array.isArray(suggestions) ? suggestions : [];
+        locationSuggestActiveIndex = -1;
+
+        if (locationSuggestItems.length === 0) {
+            closeLocationSuggestions();
+            return;
+        }
+
+        locationSuggestItems.forEach((item, idx) => {
+            const el = document.createElement('div');
+            el.className = 'location-suggestion-item';
+            el.setAttribute('role', 'option');
+            el.setAttribute('id', `loc-suggest-${idx}`);
+            el.setAttribute('aria-selected', 'false');
+            el.tabIndex = -1;
+
+            const main = document.createElement('div');
+            main.className = 'location-suggestion-main';
+            main.textContent = item.display_name || '';
+
+            const sub = document.createElement('div');
+            sub.className = 'location-suggestion-sub';
+            const parts = [];
+            if (item.type) parts.push(item.type);
+            if (item.city && item.locality) parts.push(item.city);
+            else if (item.city && !item.locality) parts.push(item.city);
+            if (item.state) parts.push(item.state);
+            sub.textContent = parts.filter(Boolean).join(' • ');
+
+            el.appendChild(main);
+            if (parts.filter(Boolean).length > 0) {
+                el.appendChild(sub);
+            }
+
+            el.addEventListener('mousedown', (e) => {
+                e.preventDefault();
+                selectLocationSuggestion(item);
+            });
+            el.addEventListener('click', () => {
+                selectLocationSuggestion(item);
+            });
+
+            locationSuggestionsEl.appendChild(el);
+        });
+
+        locationSuggestionsEl.classList.add('open');
+        if (serviceLocation) {
+            serviceLocation.setAttribute('aria-expanded', 'true');
+            serviceLocation.setAttribute('aria-controls', 'location-suggestions');
+        }
+    }
+
+    function selectLocationSuggestion(item) {
+        if (!serviceLocation) return;
+        const val = item.display_name || item.locality || item.city || '';
+        serviceLocation.value = val;
+        closeLocationSuggestions();
+        serviceLocation.focus();
     }
 
     async function searchServices() {

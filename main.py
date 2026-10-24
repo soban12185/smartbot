@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 from memory_system import ltm
 from pdf_analyzer import analyze_pdf, search as pdf_search
 from product_research import detect_product_intent, research_products
-from services.service_finder import search_services
+from services.service_finder import search_services, suggest_locations
 from tracing import (
     trace_run,
     trace_chat_request,
@@ -439,6 +439,28 @@ def service_search():
     except Exception as e:
         logger.error(f"Error in service search: {str(e)}", exc_info=True)
         return jsonify({"error": "Service search is temporarily unavailable. Please try again."}), 500
+
+
+@app.route('/api/locations/suggest', methods=['GET'])
+def locations_suggest():
+    """Suggest locations for autocomplete in Service Finder."""
+    try:
+        q = request.args.get('q', '') or ''
+        q = q.strip()
+        limit = request.args.get('limit', '8')
+        try:
+            limit_int = int(limit)
+        except (ValueError, TypeError):
+            limit_int = 8
+
+        if len(q) < 2:
+            return jsonify({'suggestions': []})
+
+        suggestions = suggest_locations(q, limit=limit_int)
+        return jsonify({'suggestions': suggestions})
+    except Exception as e:
+        logger.error(f"Error in locations suggest: {str(e)}", exc_info=True)
+        return jsonify({'suggestions': []}), 200
 
 
 @app.route('/api/event/plan', methods=['POST'])
