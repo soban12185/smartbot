@@ -10,7 +10,6 @@ neo4j
 PyMuPDF
 requests
 openai
-google-generativeai
 psycopg[binary]
 psycopg_pool
 python-multipart
